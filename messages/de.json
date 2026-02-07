@@ -1,0 +1,117 @@
+{
+  "common": {
+    "appName": "Starter.diy",
+    "demo": "Demo",
+    "login": "Anmelden",
+    "signUp": "Registrieren",
+    "getStarted": "Jetzt starten",
+    "dashboard": "Dashboard",
+    "home": "Startseite",
+    "learnMore": "Mehr erfahren"
+  },
+  "landing": {
+    "header": {
+      "features": "Funktionen",
+      "solution": "Lösungen",
+      "pricing": "Preise",
+      "about": "Über uns",
+      "openMenu": "Menü öffnen",
+      "closeMenu": "Menü schließen"
+    },
+    "hero": {
+      "badge": "Einführung von KI-Agenten",
+      "title": "Entwickle 10x schneller mit Starter",
+      "subtitle": "Gestalten. Bauen. Moderne Websites mit KI-Unterstützung ausliefern.",
+      "startBuilding": "Jetzt starten",
+      "watchVideo": "Video ansehen",
+      "appScreenAlt": "App-Bildschirm"
+    },
+    "features": {
+      "title": "Müheloses Aufgabenmanagement",
+      "description": "Automatisiere deine Aufgaben und Arbeitsabläufe, indem du deine Lieblingstools wie Notion, Todoist und mehr verbindest. KI-gestützte Planung hilft dir, auf Kurs zu bleiben und dich an wechselnde Prioritäten anzupassen.",
+      "marketing": {
+        "title": "Marketing-Kampagnen",
+        "description": "Plane und führe deine Marketing-Kampagnen mühelos und organisiert durch."
+      },
+      "scheduler": {
+        "title": "KI-Meeting-Planer",
+        "description": "Buche und verwalte deine Meetings mühelos. Behalte deinen Zeitplan im Blick."
+      },
+      "testimonialQuote": "Wow, automatisch generierte Seiten sind das, wovon man nicht einmal weiß, dass man es braucht, bis man es sieht. Es ist wie ein KI-natives CRM.",
+      "testimonialAuthor": "Artem Lazarev",
+      "testimonialRole": "Gründer"
+    },
+    "testimonials": {
+      "title": "Geliebt von der Community",
+      "subtitle": "Harum quae dolore orrupti aut temporibus ariatur."
+    },
+    "faqs": {
+      "title": "Häufig gestellte Fragen",
+      "subtitle": "Accusantium quisquam. Illo, omnis?",
+      "refundPolicy": {
+        "question": "Wie lautet die Rückerstattungsrichtlinie?",
+        "answer": "Wir bieten eine 30-tägige Geld-zurück-Garantie. Wenn Sie mit unserem Produkt nicht zufrieden sind, können Sie innerhalb von 30 Tagen nach dem Kauf eine Rückerstattung beantragen.",
+        "step1": "Um eine Rückerstattung zu beantragen, kontaktieren Sie bitte unser Support-Team mit Ihrer Bestellnummer und dem Grund für die Rückerstattung.",
+        "step2": "Rückerstattungen werden innerhalb von 3-5 Werktagen bearbeitet.",
+        "step3": "Bitte beachten Sie, dass Rückerstattungen nur für Neukunden verfügbar und auf eine pro Kunde begrenzt sind."
+      },
+      "cancelSubscription": {
+        "question": "Wie kündige ich mein Abonnement?",
+        "answer": "Sie können Ihr Abonnement jederzeit kündigen, indem Sie sich in Ihr Konto einloggen und auf die Schaltfläche \"Kündigen\" klicken."
+      },
+      "upgradePlan": {
+        "question": "Kann ich meinen Plan upgraden?",
+        "answer": "Ja, Sie können Ihren Plan jederzeit upgraden, indem Sie sich in Ihr Konto einloggen und den gewünschten Plan auswählen.",
+        "note1": "Ihnen wird die Preisdifferenz zwischen Ihrem aktuellen Plan und dem Plan, auf den Sie upgraden, berechnet.",
+        "note2": "Ihr neuer Plan tritt sofort in Kraft und Sie werden zum neuen Tarif in Ihrem nächsten Abrechnungszyklus abgerechnet."
+      },
+      "phoneSupport": {
+        "question": "Bieten Sie telefonischen Support an?",
+        "answer": "Wir bieten derzeit keinen telefonischen Support an. Sie können uns jedoch per E-Mail oder Live-Chat bei Fragen oder Anliegen kontaktieren."
+      }
+    },
+    "cta": {
+      "title": "Jetzt starten",
+      "subtitle": "Libero sapiente aliquam quibusdam aspernatur.",
+      "getStarted": "Jetzt starten",
+      "bookDemo": "Demo buchen"
+    },
+    "footer": {
+      "features": "Funktionen",
+      "solution": "Lösungen",
+      "customers": "Kunden",
+      "pricing": "Preise",
+      "help": "Hilfe",
+      "about": "Über uns",
+      "copyright": "Alle Rechte vorbehalten",
+      "goHome": "zur Startseite"
+    }
+  },
+  "dashboard": {
+    "header": {
+      "dashboard": "Dashboard",
+      "paymentGated": "Zahlungspflichtig",
+      "page": "Seite"
+    },
+    "sidebar": {
+      "darkMode": "Dunkelmodus"
+    },
+    "cards": {
+      "totalRevenue": "Gesamtumsatz",
+      "newCustomers": "Neue Kunden",
+      "activeAccounts": "Aktive Konten",
+      "growthRate": "Wachstumsrate",
+      "trendingUp": "Steigend in diesem Monat",
+      "trendingDown": "20% Rückgang in diesem Zeitraum",
+      "visitorsLast6Months": "Besucher der letzten 6 Monate",
+      "acquisitionNeedsAttention": "Akquise benötigt Aufmerksamkeit",
+      "strongRetention": "Starke Nutzerbindung",
+      "engagementExceedsTargets": "Engagement übertrifft Ziele",
+      "steadyPerformance": "Stetiger Leistungsanstieg",
+      "meetsProjections": "Entspricht Wachstumsprognosen"
+    }
+  },
+  "errors": {
+    "pageNotFound": "Seite nicht gefunden"
+  }
+}
