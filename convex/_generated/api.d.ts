@@ -8,6 +8,8 @@
  * @module
  */
 
+import type * as clerkTypes from "../clerkTypes.js";
+import type * as crons from "../crons.js";
 import type * as errorLogging from "../errorLogging.js";
 import type * as errors from "../errors.js";
 import type * as http from "../http.js";
@@ -23,6 +25,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  clerkTypes: typeof clerkTypes;
+  crons: typeof crons;
   errorLogging: typeof errorLogging;
   errors: typeof errors;
   http: typeof http;

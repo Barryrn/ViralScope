@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { useTranslations } from "next-intl"
 import { LanguageToggle } from "@/components/language-toggle"
+import { ModeToggle } from "@/components/mode-toggle"
 
 export function SiteHeader() {
   const pathname = usePathname()
@@ -34,7 +35,10 @@ export function SiteHeader() {
           />
           <h1 className="text-base font-medium">{pageTitle}</h1>
         </div>
-        <LanguageToggle />
+        <div className="flex items-center gap-2">
+          <LanguageToggle />
+          <ModeToggle />
+        </div>
       </div>
     </header>
   )

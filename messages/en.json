@@ -1,7 +1,6 @@
 {
   "common": {
-    "appName": "Starter.diy",
-    "demo": "Demo",
+    "appName": "ViralScope",
     "login": "Login",
     "signUp": "Sign Up",
     "getStarted": "Get Started",
@@ -11,104 +10,35 @@
   },
   "landing": {
     "header": {
-      "features": "Features",
-      "solution": "Solution",
-      "pricing": "Pricing",
-      "about": "About",
       "openMenu": "Open Menu",
       "closeMenu": "Close Menu"
     },
     "hero": {
-      "badge": "Introducing AI Agents",
-      "title": "Build 10x Faster with Starter",
-      "subtitle": "Craft. Build. Ship Modern Websites With AI Support.",
-      "startBuilding": "Start Building",
-      "watchVideo": "Watch Video",
-      "appScreenAlt": "app screen"
-    },
-    "features": {
-      "title": "Effortless Task Management",
-      "description": "Automate your tasks and workflows by connecting your favorite tools like Notion, Todoist, and more. AI-powered scheduling helps you stay on track and adapt to changing priorities.",
-      "marketing": {
-        "title": "Marketing Campaigns",
-        "description": "Effortlessly plan and execute your marketing campaigns organized."
-      },
-      "scheduler": {
-        "title": "AI Meeting Scheduler",
-        "description": "Effortlessly book and manage your meetings. Stay on top of your schedule."
-      },
-      "testimonialQuote": "Wow, auto-generated pages are the kind of thing that you don't even know you need until you see it. It's like an AI-native CRM.",
-      "testimonialAuthor": "Artem Lazarev",
-      "testimonialRole": "Creator"
-    },
-    "testimonials": {
-      "title": "Loved by the Community",
-      "subtitle": "Harum quae dolore orrupti aut temporibus ariatur."
-    },
-    "faqs": {
-      "title": "Frequently Asked Questions",
-      "subtitle": "Accusantium quisquam. Illo, omnis?",
-      "refundPolicy": {
-        "question": "What is the refund policy?",
-        "answer": "We offer a 30-day money back guarantee. If you are not satisfied with our product, you can request a refund within 30 days of your purchase.",
-        "step1": "To request a refund, please contact our support team with your order number and reason for the refund.",
-        "step2": "Refunds will be processed within 3-5 business days.",
-        "step3": "Please note that refunds are only available for new customers and are limited to one per customer."
-      },
-      "cancelSubscription": {
-        "question": "How do I cancel my subscription?",
-        "answer": "You can cancel your subscription at any time by logging into your account and clicking on the cancel button."
-      },
-      "upgradePlan": {
-        "question": "Can I upgrade my plan?",
-        "answer": "Yes, you can upgrade your plan at any time by logging into your account and selecting the plan you want to upgrade to.",
-        "note1": "You will be charged the difference in price between your current plan and the plan you are upgrading to.",
-        "note2": "Your new plan will take effect immediately and you will be billed at the new rate on your next billing cycle."
-      },
-      "phoneSupport": {
-        "question": "Do you offer phone support?",
-        "answer": "We do not offer phone support at this time. However, you can contact us via email or live chat for any questions or concerns you may have."
-      }
-    },
-    "cta": {
-      "title": "Start Building",
-      "subtitle": "Libero sapiente aliquam quibusdam aspernatur.",
+      "title": "Discover Which Videos Go Viral",
+      "subtitle": "Analytics platform for YouTube creators. Track performance, measure audience resonance, and find your viral moments.",
       "getStarted": "Get Started",
-      "bookDemo": "Book Demo"
+      "learnMore": "Learn More"
     },
     "footer": {
-      "features": "Features",
-      "solution": "Solution",
-      "customers": "Customers",
-      "pricing": "Pricing",
-      "help": "Help",
-      "about": "About",
       "copyright": "All rights reserved",
-      "goHome": "go home"
+      "goHome": "Go home",
+      "tagline": "Analytics for YouTube creators who want to understand what makes content go viral."
     }
   },
   "dashboard": {
     "header": {
       "dashboard": "Dashboard",
-      "paymentGated": "Payment gated",
+      "analytics": "Analytics",
+      "videos": "Videos",
+      "paymentGated": "Pro Features",
       "page": "Page"
     },
     "sidebar": {
       "darkMode": "Dark Mode"
     },
-    "cards": {
-      "totalRevenue": "Total Revenue",
-      "newCustomers": "New Customers",
-      "activeAccounts": "Active Accounts",
-      "growthRate": "Growth Rate",
-      "trendingUp": "Trending up this month",
-      "trendingDown": "Down 20% this period",
-      "visitorsLast6Months": "Visitors for the last 6 months",
-      "acquisitionNeedsAttention": "Acquisition needs attention",
-      "strongRetention": "Strong user retention",
-      "engagementExceedsTargets": "Engagement exceed targets",
-      "steadyPerformance": "Steady performance increase",
-      "meetsProjections": "Meets growth projections"
+    "welcome": {
+      "title": "Welcome to ViralScope",
+      "subtitle": "Connect your YouTube channel to get started with analytics."
     }
   },
   "errors": {
