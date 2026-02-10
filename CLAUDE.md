@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-SaaS starter kit with Next.js 15, Convex, Clerk auth/billing, and YouTube analytics.
+ViralScope - Analytics platform for YouTube and TikTok creators measuring virality and content quality.
 
 ## Commands
 
@@ -19,7 +19,12 @@ npm run lint      # ESLint
 - `/` - Landing page (`/(landing)` route group)
 - `/dashboard/*` - Protected (Clerk middleware)
 - `/dashboard/youtube` - YouTube analytics
+- `/dashboard/tiktok` - TikTok analytics (planned)
 - `/dashboard/payment-gated` - Subscription-gated
+
+**Core Metrics:**
+- **Viral Score** - How fast and strongly a video spreads
+- **Reception Score** - How well the audience responds
 
 **Backend:** All in `/convex/` - schema in `schema.ts`, webhooks in `http.ts`
 
@@ -34,7 +39,7 @@ npm run lint      # ESLint
 
 **Error Logging:** Convex `errorLogs` table → cron syncs to Sentry via `/api/error-sync`
 
-**Images:** YouTube hostnames configured in `next.config.ts` (`yt3.ggpht.com`, `i.ytimg.com`)
+**Images:** YouTube/TikTok hostnames configured in `next.config.ts` (`yt3.ggpht.com`, `i.ytimg.com`)
 
 ## Environment
 
