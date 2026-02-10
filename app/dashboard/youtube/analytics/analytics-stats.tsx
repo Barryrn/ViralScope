@@ -32,36 +32,36 @@ export function AnalyticsStats({
       label: "Total Videos",
       value: videos.length,
       icon: IconTrophy,
-      gradient: "from-amber-500 to-orange-500",
-      bgGradient: "from-amber-500/10 to-orange-500/10",
+      color: "text-amber-600 dark:text-amber-400",
+      bg: "bg-amber-50 dark:bg-amber-500/10",
     },
     {
-      label: "Avg Viral Score",
+      label: "Avg Viral",
       value: avgViralScore.toFixed(1),
       icon: IconFlame,
-      gradient: "from-rose-500 to-orange-400",
-      bgGradient: "from-rose-500/10 to-orange-400/10",
+      color: "text-rose-600 dark:text-rose-400",
+      bg: "bg-rose-50 dark:bg-rose-500/10",
     },
     {
       label: "Avg Performance",
       value: avgPerformanceScore.toFixed(1),
       icon: IconChartBar,
-      gradient: "from-cyan-500 to-violet-500",
-      bgGradient: "from-cyan-500/10 to-violet-500/10",
+      color: "text-cyan-600 dark:text-cyan-400",
+      bg: "bg-cyan-50 dark:bg-cyan-500/10",
     },
     {
       label: "Shorts",
       value: shortsCount,
       icon: IconBolt,
-      gradient: "from-rose-500 to-pink-500",
-      bgGradient: "from-rose-500/10 to-pink-500/10",
+      color: "text-pink-600 dark:text-pink-400",
+      bg: "bg-pink-50 dark:bg-pink-500/10",
     },
     {
       label: "Long Videos",
       value: longFormCount,
       icon: IconPlayerPlay,
-      gradient: "from-blue-500 to-indigo-500",
-      bgGradient: "from-blue-500/10 to-indigo-500/10",
+      color: "text-blue-600 dark:text-blue-400",
+      bg: "bg-blue-50 dark:bg-blue-500/10",
     },
   ];
 
@@ -70,45 +70,21 @@ export function AnalyticsStats({
       {stats.map((stat, index) => (
         <motion.div
           key={stat.label}
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3, delay: index * 0.05 }}
-          className={cn(
-            "group relative overflow-hidden rounded-xl border border-border/40 p-4 transition-all hover:border-border/60 hover:shadow-lg",
-            `bg-gradient-to-br ${stat.bgGradient}`
-          )}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, delay: index * 0.04 }}
+          className="rounded-xl border border-border/50 bg-card p-4 shadow-sm transition-shadow hover:shadow-md"
         >
-          {/* Ambient glow */}
-          <div
-            className={cn(
-              "pointer-events-none absolute -right-4 -top-4 h-16 w-16 rounded-full opacity-30 blur-2xl transition-opacity group-hover:opacity-50",
-              `bg-gradient-to-br ${stat.gradient}`
-            )}
-          />
+          <div className={cn("mb-2 inline-flex h-8 w-8 items-center justify-center rounded-lg", stat.bg)}>
+            <stat.icon className={cn("h-4 w-4", stat.color)} />
+          </div>
 
-          <div className="relative">
-            <div
-              className={cn(
-                "mb-2 inline-flex h-8 w-8 items-center justify-center rounded-lg",
-                `bg-gradient-to-br ${stat.gradient}`
-              )}
-            >
-              <stat.icon className="h-4 w-4 text-white" />
-            </div>
+          <div className={cn("text-2xl font-semibold tabular-nums", stat.color)}>
+            {stat.value}
+          </div>
 
-            <div
-              className={cn(
-                "text-2xl font-bold tabular-nums",
-                "bg-clip-text text-transparent",
-                `bg-gradient-to-r ${stat.gradient}`
-              )}
-            >
-              {stat.value}
-            </div>
-
-            <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              {stat.label}
-            </div>
+          <div className="text-xs text-muted-foreground">
+            {stat.label}
           </div>
         </motion.div>
       ))}
@@ -128,34 +104,31 @@ export function TopPerformers({ topViral, topPerformance }: TopPerformersProps) 
     <div className="grid gap-4 md:grid-cols-2">
       {topViral && (
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="relative overflow-hidden rounded-xl border border-rose-500/20 bg-gradient-to-br from-rose-500/5 via-transparent to-orange-500/5 p-4"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-xl border border-border/50 bg-card p-4 shadow-sm"
         >
-          {/* Fire decorative element */}
-          <div className="pointer-events-none absolute -right-8 -top-8 text-8xl opacity-10">
-            🔥
-          </div>
-
-          <div className="relative flex items-start gap-4">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-orange-400 shadow-lg shadow-rose-500/20">
-              <IconFlame className="h-6 w-6 text-white" />
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-rose-50 dark:bg-rose-500/10">
+              <IconFlame className="h-5 w-5 text-rose-500" />
             </div>
 
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-medium uppercase tracking-wider text-rose-400">
+                <span className="text-xs font-medium text-rose-600 dark:text-rose-400">
                   Top Viral
                 </span>
-                <IconTrendingUp className="h-3 w-3 text-rose-400" />
+                <IconTrendingUp className="h-3 w-3 text-rose-500" />
               </div>
-              <h4 className="mt-1 line-clamp-1 font-semibold">{topViral.title}</h4>
-              <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                <span>{topViral.channelTitle}</span>
-                <span className="opacity-40">·</span>
-                <span className="font-bold text-rose-400">
-                  Score: {topViral.viralScore.toFixed(1)}
+              <h4 className="mt-0.5 line-clamp-1 text-sm font-medium">
+                {topViral.title}
+              </h4>
+              <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                <span className="font-semibold text-rose-600 dark:text-rose-400">
+                  {topViral.viralScore.toFixed(1)}
                 </span>
+                <span>·</span>
+                <span className="truncate">{topViral.channelTitle}</span>
               </div>
             </div>
           </div>
@@ -164,34 +137,32 @@ export function TopPerformers({ topViral, topPerformance }: TopPerformersProps) 
 
       {topPerformance && (
         <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="relative overflow-hidden rounded-xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/5 via-transparent to-violet-500/5 p-4"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="rounded-xl border border-border/50 bg-card p-4 shadow-sm"
         >
-          {/* Trophy decorative element */}
-          <div className="pointer-events-none absolute -right-8 -top-8 text-8xl opacity-10">
-            🏆
-          </div>
-
-          <div className="relative flex items-start gap-4">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-violet-500 shadow-lg shadow-cyan-500/20">
-              <IconChartBar className="h-6 w-6 text-white" />
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-cyan-50 dark:bg-cyan-500/10">
+              <IconChartBar className="h-5 w-5 text-cyan-500" />
             </div>
 
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-medium uppercase tracking-wider text-cyan-400">
+                <span className="text-xs font-medium text-cyan-600 dark:text-cyan-400">
                   Top Performer
                 </span>
-                <IconTrophy className="h-3 w-3 text-cyan-400" />
+                <IconTrophy className="h-3 w-3 text-cyan-500" />
               </div>
-              <h4 className="mt-1 line-clamp-1 font-semibold">{topPerformance.title}</h4>
-              <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                <span>{topPerformance.channelTitle}</span>
-                <span className="opacity-40">·</span>
-                <span className="font-bold text-cyan-400">
-                  Score: {topPerformance.performanceScore.toFixed(1)}
+              <h4 className="mt-0.5 line-clamp-1 text-sm font-medium">
+                {topPerformance.title}
+              </h4>
+              <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                <span className="font-semibold text-cyan-600 dark:text-cyan-400">
+                  {topPerformance.performanceScore.toFixed(1)}
                 </span>
+                <span>·</span>
+                <span className="truncate">{topPerformance.channelTitle}</span>
               </div>
             </div>
           </div>

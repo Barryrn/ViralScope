@@ -1,10 +1,10 @@
 "use client";
 
 import { motion, AnimatePresence } from "motion/react";
-import { VideoCard } from "./video-card";
 import { ChannelView } from "./channel-view";
 import { SearchResults } from "./search-results";
 import { LoadingSkeleton } from "./loading-skeleton";
+import { VideoCardWithScores } from "./components/video-card-with-scores";
 import { IconAlertCircle, IconSearch } from "@tabler/icons-react";
 import type { FetchState, YouTubeResult } from "@/hooks/use-youtube-data";
 import type { ParsedYouTubeInput } from "@/lib/youtube-utils";
@@ -15,6 +15,7 @@ interface YouTubeResultsProps {
   result: YouTubeResult | null;
   error: string | null;
   parsedInput: ParsedYouTubeInput | null;
+  onReset?: () => void;
 }
 
 export function YouTubeResults({
@@ -22,6 +23,7 @@ export function YouTubeResults({
   result,
   error,
   parsedInput,
+  onReset,
 }: YouTubeResultsProps) {
   const t = useTranslations("youtube.results");
 
@@ -87,8 +89,12 @@ export function YouTubeResults({
           exit={{ opacity: 0, y: -20 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
-          {result.type === "video" && <VideoCard video={result.data} />}
-          {result.type === "channel" && <ChannelView channel={result.data} />}
+          {result.type === "video" && (
+            <VideoCardWithScores video={result.data} variant="list" />
+          )}
+          {result.type === "channel" && (
+            <ChannelView channel={result.data} onReset={onReset} />
+          )}
           {result.type === "search" && <SearchResults data={result.data} />}
         </motion.div>
       </AnimatePresence>

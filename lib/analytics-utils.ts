@@ -1,6 +1,10 @@
 // Analytics utilities for calculating Viral Score and Performance Score
 
 import type { VideoData } from "@/convex/youtubeTypes";
+import { parseDurationToSeconds } from "./youtube-utils";
+
+// Re-export for backwards compatibility
+export { parseDurationToSeconds };
 
 /**
  * Video classification based on duration
@@ -8,21 +12,6 @@ import type { VideoData } from "@/convex/youtubeTypes";
  * Long-form: > 60 seconds
  */
 export type VideoType = "short" | "long" | "all";
-
-/**
- * Parse ISO 8601 duration to seconds
- * e.g., "PT1M30S" → 90, "PT5M" → 300, "PT1H" → 3600
- */
-export function parseDurationToSeconds(isoDuration: string): number {
-  const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-  if (!match) return 0;
-
-  const hours = match[1] ? parseInt(match[1], 10) : 0;
-  const minutes = match[2] ? parseInt(match[2], 10) : 0;
-  const seconds = match[3] ? parseInt(match[3], 10) : 0;
-
-  return hours * 3600 + minutes * 60 + seconds;
-}
 
 /**
  * Classify video as Short or Long-form

@@ -1,20 +1,19 @@
-import { Suspense } from "react";
-import { AnalyticsDashboard } from "./analytics-dashboard";
-import { IconLoader2 } from "@tabler/icons-react";
+import { redirect } from "next/navigation";
 
-function AnalyticsLoading() {
-  return (
-    <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 px-4 lg:px-6">
-      <IconLoader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      <p className="text-sm text-muted-foreground">Loading analytics...</p>
-    </div>
-  );
+interface AnalyticsPageProps {
+  searchParams: Promise<{ channel?: string }>;
 }
 
-export default function AnalyticsPage() {
-  return (
-    <Suspense fallback={<AnalyticsLoading />}>
-      <AnalyticsDashboard />
-    </Suspense>
-  );
+export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps) {
+  const params = await searchParams;
+  const channel = params.channel;
+
+  // Redirect to main YouTube page with insights tab
+  if (channel) {
+    // If there's a channel param, we need to handle it differently
+    // For now, just redirect to YouTube page - the user can re-enter the channel
+    redirect("/dashboard/youtube");
+  }
+
+  redirect("/dashboard/youtube");
 }
