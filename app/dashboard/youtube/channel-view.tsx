@@ -53,6 +53,9 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
   const [timeframe, setTimeframe] = useState<TimeframeValue>("all");
   const [sortBy, setSortBy] = useState<SortOption>("viral");
 
+  // Pagination state for displayed videos
+  const [displayCount, setDisplayCount] = useState(10);
+
   const fetchChannelVideos = useAction(api.youtube.fetchChannelVideos);
 
   // Initial fetch when channel is available
@@ -80,26 +83,36 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
     loadVideos();
   }, [channel.id, fetchChannelVideos]);
 
-  // Load more videos handler
+  // Reset display count when filters change
+  useEffect(() => {
+    setDisplayCount(10);
+  }, [videoType, timeframe, sortBy]);
+
+  // Load more videos handler - shows 5 more from filtered list
   const handleLoadMore = useCallback(async () => {
-    if (!nextPageToken || isLoadingMore) return;
+    if (isLoadingMore) return;
 
-    setIsLoadingMore(true);
+    // First, increase display count by 5
+    setDisplayCount((prev) => prev + 5);
 
-    try {
-      const result = await fetchChannelVideos({
-        channelId: channel.id,
-        pageToken: nextPageToken,
-        maxResults: 50,
-      });
-      setVideos((prev) => [...prev, ...result.videos]);
-      setNextPageToken(result.nextPageToken);
-    } catch (err) {
-      console.error("Failed to load more videos:", err);
-    } finally {
-      setIsLoadingMore(false);
+    // If we're getting close to the end of loaded videos and there's more to fetch
+    if (nextPageToken && displayCount + 5 >= videos.length - 10) {
+      setIsLoadingMore(true);
+      try {
+        const result = await fetchChannelVideos({
+          channelId: channel.id,
+          pageToken: nextPageToken,
+          maxResults: 50,
+        });
+        setVideos((prev) => [...prev, ...result.videos]);
+        setNextPageToken(result.nextPageToken);
+      } catch (err) {
+        console.error("Failed to load more videos:", err);
+      } finally {
+        setIsLoadingMore(false);
+      }
     }
-  }, [channel.id, nextPageToken, isLoadingMore, fetchChannelVideos]);
+  }, [channel.id, nextPageToken, isLoadingMore, fetchChannelVideos, displayCount, videos.length]);
 
   // Retry handler
   const handleRetry = useCallback(async () => {
@@ -134,6 +147,14 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
     const filtered = filterAndProcessVideos(videos, videoType, timeframeDays);
     return sortVideos(filtered, sortBy);
   }, [videos, videoType, timeframeDays, sortBy]);
+
+  // Videos to display (paginated)
+  const displayedVideos = useMemo(() => {
+    return processedVideos.slice(0, displayCount);
+  }, [processedVideos, displayCount]);
+
+  // Check if there are more videos to show
+  const hasMoreToShow = displayCount < processedVideos.length || !!nextPageToken;
 
   const stats = useMemo(
     () => getVideoStats(processedVideos),
@@ -202,6 +223,10 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
                 <span>
                   Showing{" "}
                   <span className="font-semibold text-foreground">
+                    {displayedVideos.length}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-semibold text-foreground">
                     {processedVideos.length}
                   </span>{" "}
                   {processedVideos.length === 1 ? "video" : "videos"}
@@ -248,7 +273,7 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
                     exit={{ opacity: 0 }}
                     className="flex flex-col gap-4"
                   >
-                    {processedVideos.map((video, index) => (
+                    {displayedVideos.map((video, index) => (
                       <VideoCardWithScores
                         key={video.id}
                         video={video}
@@ -261,7 +286,7 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
               </AnimatePresence>
 
               {/* Load More */}
-              {nextPageToken && (
+              {hasMoreToShow && (
                 <LoadMoreButton
                   onClick={handleLoadMore}
                   isLoading={isLoadingMore}
