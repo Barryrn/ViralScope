@@ -9,7 +9,6 @@ import {
   IconAlertCircle,
   IconRefresh,
   IconVideo,
-  IconChevronDown,
   IconMoodEmpty,
   IconLoader2,
 } from "@tabler/icons-react";
@@ -44,17 +43,12 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
   // Video fetching state
   const [videosState, setVideosState] = useState<VideosState>("idle");
   const [videos, setVideos] = useState<VideoData[]>([]);
-  const [nextPageToken, setNextPageToken] = useState<string | undefined>();
   const [videosError, setVideosError] = useState<string | null>(null);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Analytics filter state
   const [videoType, setVideoType] = useState<VideoType>("all");
   const [timeframe, setTimeframe] = useState<TimeframeValue>("all");
   const [sortBy, setSortBy] = useState<SortOption>("viral");
-
-  // Pagination state for displayed videos
-  const [displayCount, setDisplayCount] = useState(10);
 
   const fetchChannelVideos = useAction(api.youtube.fetchChannelVideos);
 
@@ -70,7 +64,6 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
           maxResults: 50,
         });
         setVideos(result.videos);
-        setNextPageToken(result.nextPageToken);
         setVideosState("success");
       } catch (err) {
         const message =
@@ -83,43 +76,11 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
     loadVideos();
   }, [channel.id, fetchChannelVideos]);
 
-  // Reset display count when filters change
-  useEffect(() => {
-    setDisplayCount(10);
-  }, [videoType, timeframe, sortBy]);
-
-  // Load more videos handler - shows 5 more from filtered list
-  const handleLoadMore = useCallback(async () => {
-    if (isLoadingMore) return;
-
-    // First, increase display count by 5
-    setDisplayCount((prev) => prev + 5);
-
-    // If we're getting close to the end of loaded videos and there's more to fetch
-    if (nextPageToken && displayCount + 5 >= videos.length - 10) {
-      setIsLoadingMore(true);
-      try {
-        const result = await fetchChannelVideos({
-          channelId: channel.id,
-          pageToken: nextPageToken,
-          maxResults: 50,
-        });
-        setVideos((prev) => [...prev, ...result.videos]);
-        setNextPageToken(result.nextPageToken);
-      } catch (err) {
-        console.error("Failed to load more videos:", err);
-      } finally {
-        setIsLoadingMore(false);
-      }
-    }
-  }, [channel.id, nextPageToken, isLoadingMore, fetchChannelVideos, displayCount, videos.length]);
-
   // Retry handler
   const handleRetry = useCallback(async () => {
     setVideosState("loading");
     setVideosError(null);
     setVideos([]);
-    setNextPageToken(undefined);
 
     try {
       const result = await fetchChannelVideos({
@@ -127,7 +88,6 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
         maxResults: 50,
       });
       setVideos(result.videos);
-      setNextPageToken(result.nextPageToken);
       setVideosState("success");
     } catch (err) {
       const message =
@@ -147,14 +107,6 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
     const filtered = filterAndProcessVideos(videos, videoType, timeframeDays);
     return sortVideos(filtered, sortBy);
   }, [videos, videoType, timeframeDays, sortBy]);
-
-  // Videos to display (paginated)
-  const displayedVideos = useMemo(() => {
-    return processedVideos.slice(0, displayCount);
-  }, [processedVideos, displayCount]);
-
-  // Check if there are more videos to show
-  const hasMoreToShow = displayCount < processedVideos.length || !!nextPageToken;
 
   const stats = useMemo(
     () => getVideoStats(processedVideos),
@@ -223,10 +175,6 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
                 <span>
                   Showing{" "}
                   <span className="font-semibold text-foreground">
-                    {displayedVideos.length}
-                  </span>{" "}
-                  of{" "}
-                  <span className="font-semibold text-foreground">
                     {processedVideos.length}
                   </span>{" "}
                   {processedVideos.length === 1 ? "video" : "videos"}
@@ -273,7 +221,7 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
                     exit={{ opacity: 0 }}
                     className="flex flex-col gap-4"
                   >
-                    {displayedVideos.map((video, index) => (
+                    {processedVideos.map((video, index) => (
                       <VideoCardWithScores
                         key={video.id}
                         video={video}
@@ -284,14 +232,6 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
                   </motion.div>
                 )}
               </AnimatePresence>
-
-              {/* Load More */}
-              {hasMoreToShow && (
-                <LoadMoreButton
-                  onClick={handleLoadMore}
-                  isLoading={isLoadingMore}
-                />
-              )}
             </>
           )}
         </div>
@@ -365,46 +305,6 @@ function EmptyState() {
       <p className="mt-1 max-w-sm text-sm text-muted-foreground/70">
         This channel hasn&apos;t uploaded any public videos yet
       </p>
-    </motion.div>
-  );
-}
-
-function LoadMoreButton({
-  onClick,
-  isLoading,
-}: {
-  onClick: () => void;
-  isLoading: boolean;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.3 }}
-      className="flex justify-center pt-2"
-    >
-      <Button
-        variant="outline"
-        onClick={onClick}
-        disabled={isLoading}
-        className="gap-2 px-6"
-      >
-        {isLoading ? (
-          <>
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              className="h-4 w-4 rounded-full border-2 border-muted-foreground border-t-transparent"
-            />
-            <span>Loading...</span>
-          </>
-        ) : (
-          <>
-            <span>Load More Videos</span>
-            <IconChevronDown className="h-4 w-4" />
-          </>
-        )}
-      </Button>
     </motion.div>
   );
 }
