@@ -47,7 +47,7 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <ClerkProvider>
+            <ClerkProvider telemetry={false}>
               <ConvexClientProvider>
                 {children}
                 <Toaster position="top-right" richColors closeButton />

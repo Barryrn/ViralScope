@@ -17,6 +17,8 @@ import type * as paymentAttemptTypes from "../paymentAttemptTypes.js";
 import type * as paymentAttempts from "../paymentAttempts.js";
 import type * as users from "../users.js";
 import type * as withErrorHandling from "../withErrorHandling.js";
+import type * as youtube from "../youtube.js";
+import type * as youtubeTypes from "../youtubeTypes.js";
 
 import type {
   ApiFromModules,
@@ -34,6 +36,8 @@ declare const fullApi: ApiFromModules<{
   paymentAttempts: typeof paymentAttempts;
   users: typeof users;
   withErrorHandling: typeof withErrorHandling;
+  youtube: typeof youtube;
+  youtubeTypes: typeof youtubeTypes;
 }>;
 
 /**

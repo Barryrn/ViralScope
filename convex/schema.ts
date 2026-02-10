@@ -30,4 +30,21 @@ export default defineSchema({
     .index("bySeverity", ["severity"])
     .index("byCategory", ["category"])
     .index("bySentToSentry", ["sentToSentry"]),
+
+  // YouTube data cache for API responses
+  youtubeCache: defineTable({
+    resourceId: v.string(),
+    resourceType: v.union(
+      v.literal("video"),
+      v.literal("channel"),
+      v.literal("search")
+    ),
+    data: v.any(),
+    userId: v.string(),
+    fetchedAt: v.number(),
+    expiresAt: v.number(),
+  })
+    .index("byResourceId", ["resourceId"])
+    .index("byUserId", ["userId"])
+    .index("byExpiresAt", ["expiresAt"]),
 });

@@ -10,6 +10,7 @@ export type ErrorCategory =
   | "webhook"
   | "payment"
   | "validation"
+  | "youtube_api"
   | "unknown";
 
 // Validator for error context (used in errorLogs table)
@@ -43,6 +44,7 @@ export const USER_FRIENDLY_ERRORS: Record<ErrorCategory, string> = {
   payment:
     "Payment processing encountered an issue. Please try again or contact support.",
   validation: "The provided information is invalid. Please check and try again.",
+  youtube_api: "Unable to fetch YouTube data. Please check the URL and try again.",
   unknown: "An unexpected error occurred. Our team has been notified.",
 };
 

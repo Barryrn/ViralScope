@@ -184,6 +184,7 @@ Your application will be available at `http://localhost:3000`.
 ### Key Routes
 - `/` - Beautiful landing page with pricing
 - `/dashboard` - Protected user dashboard
+- `/dashboard/youtube` - YouTube channel analytics
 - `/dashboard/payment-gated` - Subscription-protected content
 - `/clerk-users-webhook` - Clerk webhook handler (Convex HTTP endpoint)
 

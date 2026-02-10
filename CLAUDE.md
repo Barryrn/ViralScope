@@ -28,8 +28,14 @@ This is a **SaaS starter kit** built with Next.js 15 (App Router), Convex (real-
 ### Route Structure
 - `/` - Public landing page (route group: `/(landing)`)
 - `/dashboard/*` - Protected routes (Clerk middleware authentication)
+- `/dashboard/youtube` - YouTube channel analytics
 - `/dashboard/payment-gated` - Subscription-required content
 - `/api/error-sync` - Sentry sync endpoint (bearer token auth, not Clerk)
+
+### Next.js Image Configuration
+YouTube images require allowed hostnames in `next.config.ts`:
+- `yt3.ggpht.com` - YouTube channel avatars
+- `i.ytimg.com` - YouTube video thumbnails
 
 ### Convex Backend (`/convex/`)
 All backend logic lives in Convex. Key patterns:
