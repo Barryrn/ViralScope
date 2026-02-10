@@ -19,11 +19,13 @@ import {
 import type { ChannelData, VideoData } from "@/convex/youtubeTypes";
 import {
   filterAndProcessVideos,
-  sortByScore,
+  sortVideos,
   getVideoStats,
   TIMEFRAME_OPTIONS,
+  SORT_OPTIONS,
   type VideoType,
   type TimeframeValue,
+  type SortOption,
 } from "@/lib/analytics-utils";
 import { cn } from "@/lib/utils";
 
@@ -59,7 +61,7 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
   // Analytics filter state
   const [videoType, setVideoType] = useState<VideoType>("all");
   const [timeframe, setTimeframe] = useState<TimeframeValue>("30");
-  const [sortBy, setSortBy] = useState<"viral" | "performance">("viral");
+  const [sortBy, setSortBy] = useState<SortOption>("viral");
 
   const fetchChannelVideos = useAction(api.youtube.fetchChannelVideos);
 
@@ -154,13 +156,19 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
 
   const processedVideos = useMemo(() => {
     const filtered = filterAndProcessVideos(videos, videoType, timeframeDays);
-    return sortByScore(filtered, sortBy);
+    return sortVideos(filtered, sortBy);
   }, [videos, videoType, timeframeDays, sortBy]);
 
   const stats = useMemo(
     () => getVideoStats(processedVideos),
     [processedVideos]
   );
+
+  // Get the current sort label for display
+  const currentSortLabel = useMemo(() => {
+    const option = SORT_OPTIONS.find((o) => o.value === sortBy);
+    return option?.label ?? "Viral Score";
+  }, [sortBy]);
 
   return (
     <div className={cn("space-y-6", className)}>
@@ -285,8 +293,7 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
                     )}
                   </span>
                   <span className="text-xs">
-                    Sorted by{" "}
-                    {sortBy === "viral" ? "Viral Score" : "Performance Score"}
+                    Sorted by {currentSortLabel}
                   </span>
                 </div>
 

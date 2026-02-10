@@ -248,17 +248,54 @@ export function filterAndProcessVideos(
 }
 
 /**
- * Sort videos by a specific score
+ * Sort options for video sorting
+ */
+export type SortOption = "viral" | "performance" | "views" | "date" | "comments" | "likes";
+
+export const SORT_OPTIONS = [
+  { value: "viral" as const, label: "Viral Score" },
+  { value: "performance" as const, label: "Performance Score" },
+  { value: "views" as const, label: "Views" },
+  { value: "date" as const, label: "Date" },
+  { value: "comments" as const, label: "Comments" },
+  { value: "likes" as const, label: "Likes" },
+] as const;
+
+/**
+ * Sort videos by a specific criterion
+ */
+export function sortVideos(
+  videos: VideoWithScores[],
+  sortBy: SortOption
+): VideoWithScores[] {
+  return [...videos].sort((a, b) => {
+    switch (sortBy) {
+      case "viral":
+        return b.viralScore - a.viralScore;
+      case "performance":
+        return b.performanceScore - a.performanceScore;
+      case "views":
+        return b.viewCount - a.viewCount;
+      case "date":
+        return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+      case "comments":
+        return b.commentCount - a.commentCount;
+      case "likes":
+        return b.likeCount - a.likeCount;
+      default:
+        return b.viralScore - a.viralScore;
+    }
+  });
+}
+
+/**
+ * Sort videos by a specific score (legacy - kept for compatibility)
  */
 export function sortByScore(
   videos: VideoWithScores[],
   sortBy: "viral" | "performance"
 ): VideoWithScores[] {
-  return [...videos].sort((a, b) => {
-    const scoreA = sortBy === "viral" ? a.viralScore : a.performanceScore;
-    const scoreB = sortBy === "viral" ? b.viralScore : b.performanceScore;
-    return scoreB - scoreA;
-  });
+  return sortVideos(videos, sortBy);
 }
 
 /**

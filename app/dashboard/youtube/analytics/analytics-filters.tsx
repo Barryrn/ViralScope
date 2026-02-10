@@ -14,19 +14,16 @@ import {
   IconPlayerPlay,
   IconCalendar,
   IconArrowsSort,
-  IconFlame,
-  IconChartBar,
 } from "@tabler/icons-react";
-import { TIMEFRAME_OPTIONS, type TimeframeValue, type VideoType } from "@/lib/analytics-utils";
-import { cn } from "@/lib/utils";
+import { TIMEFRAME_OPTIONS, SORT_OPTIONS, type TimeframeValue, type VideoType, type SortOption } from "@/lib/analytics-utils";
 
 interface AnalyticsFiltersProps {
   videoType: VideoType;
   onVideoTypeChange: (type: VideoType) => void;
   timeframe: TimeframeValue;
   onTimeframeChange: (timeframe: TimeframeValue) => void;
-  sortBy: "viral" | "performance";
-  onSortByChange: (sortBy: "viral" | "performance") => void;
+  sortBy: SortOption;
+  onSortByChange: (sortBy: SortOption) => void;
 }
 
 export function AnalyticsFilters({
@@ -88,35 +85,21 @@ export function AnalyticsFilters({
         {/* Divider */}
         <div className="h-5 w-px bg-border" />
 
-        {/* Sort By Toggle */}
+        {/* Sort By Dropdown */}
         <div className="flex items-center gap-2">
           <IconArrowsSort className="h-3.5 w-3.5 text-muted-foreground" />
-          <div className="flex rounded-lg border border-border/50 bg-muted/50 p-0.5">
-            <button
-              onClick={() => onSortByChange("viral")}
-              className={cn(
-                "flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-all",
-                sortBy === "viral"
-                  ? "bg-card text-rose-600 shadow-sm dark:text-rose-400"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <IconFlame className="h-3 w-3" />
-              Viral
-            </button>
-            <button
-              onClick={() => onSortByChange("performance")}
-              className={cn(
-                "flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-all",
-                sortBy === "performance"
-                  ? "bg-card text-cyan-600 shadow-sm dark:text-cyan-400"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <IconChartBar className="h-3 w-3" />
-              Performance
-            </button>
-          </div>
+          <Select value={sortBy} onValueChange={(v) => onSortByChange(v as SortOption)}>
+            <SelectTrigger className="h-8 w-[160px] text-xs">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              {SORT_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value} className="text-xs">
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>
