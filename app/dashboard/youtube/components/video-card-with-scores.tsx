@@ -21,7 +21,6 @@ import {
   timeAgo,
 } from "@/lib/youtube-utils";
 import {
-  getScoreLabel,
   processVideoWithScores,
   type VideoWithScores,
 } from "@/lib/analytics-utils";
@@ -54,15 +53,10 @@ export function VideoCardWithScores({
     ? video
     : processVideoWithScores(video);
 
-  const viralLabel = getScoreLabel(videoWithScores.viralScore);
-  const performanceLabel = getScoreLabel(videoWithScores.performanceScore);
-
   if (variant === "list") {
     return (
       <ListCard
         video={videoWithScores}
-        viralLabel={viralLabel}
-        performanceLabel={performanceLabel}
         index={index}
         showAnimation={showAnimation}
         className={className}
@@ -73,8 +67,6 @@ export function VideoCardWithScores({
   return (
     <GridCard
       video={videoWithScores}
-      viralLabel={viralLabel}
-      performanceLabel={performanceLabel}
       index={index}
       showAnimation={showAnimation}
       className={className}
@@ -85,15 +77,11 @@ export function VideoCardWithScores({
 // Grid variant - compact card for channel video grids
 function GridCard({
   video,
-  viralLabel,
-  performanceLabel,
   index,
   showAnimation,
   className,
 }: {
   video: VideoWithScores;
-  viralLabel: ReturnType<typeof getScoreLabel>;
-  performanceLabel: ReturnType<typeof getScoreLabel>;
   index: number;
   showAnimation: boolean;
   className?: string;
@@ -158,12 +146,10 @@ function GridCard({
             <div className="mt-3 flex items-center gap-2">
               <ScorePill
                 score={video.viralScore}
-                label={viralLabel}
                 variant="viral"
               />
               <ScorePill
                 score={video.performanceScore}
-                label={performanceLabel}
                 variant="performance"
               />
             </div>
@@ -177,15 +163,11 @@ function GridCard({
 // List variant - horizontal card for analytics view
 function ListCard({
   video,
-  viralLabel,
-  performanceLabel,
   index,
   showAnimation,
   className,
 }: {
   video: VideoWithScores;
-  viralLabel: ReturnType<typeof getScoreLabel>;
-  performanceLabel: ReturnType<typeof getScoreLabel>;
   index: number;
   showAnimation: boolean;
   className?: string;
@@ -279,15 +261,11 @@ function ListCard({
             <div className="mt-auto flex items-center gap-3 pt-3">
               <ScorePill
                 score={video.viralScore}
-                label={viralLabel}
                 variant="viral"
-                showLabel
               />
               <ScorePill
                 score={video.performanceScore}
-                label={performanceLabel}
                 variant="performance"
-                showLabel
               />
 
               {/* Velocity */}
@@ -306,17 +284,13 @@ function ListCard({
   );
 }
 
-// Score pill component - compact score display
+// Score pill component - compact score display (score only, no label)
 function ScorePill({
   score,
-  label,
   variant,
-  showLabel = false,
 }: {
   score: number;
-  label: ReturnType<typeof getScoreLabel>;
   variant: "viral" | "performance";
-  showLabel?: boolean;
 }) {
   const Icon = variant === "viral" ? IconFlame : IconChartBar;
 
@@ -346,11 +320,6 @@ function ScorePill({
       <span className={cn("text-xs font-semibold tabular-nums", colors.text)}>
         {score.toFixed(0)}
       </span>
-      {showLabel && (
-        <span className="text-[10px] text-muted-foreground">
-          {label.label}
-        </span>
-      )}
     </div>
   );
 }

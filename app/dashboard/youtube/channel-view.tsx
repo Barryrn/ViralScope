@@ -2,16 +2,13 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAction } from "convex/react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import { motion, AnimatePresence } from "motion/react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import {
   IconAlertCircle,
   IconRefresh,
   IconVideo,
-  IconChartBar,
   IconChevronDown,
   IconMoodEmpty,
   IconLoader2,
@@ -44,13 +41,6 @@ interface ChannelViewProps {
 type VideosState = "idle" | "loading" | "success" | "error";
 
 export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  // Tab state from URL
-  const currentTab = searchParams.get("tab") || "videos";
-
   // Video fetching state
   const [videosState, setVideosState] = useState<VideosState>("idle");
   const [videos, setVideos] = useState<VideoData[]>([]);
@@ -64,20 +54,6 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
   const [sortBy, setSortBy] = useState<SortOption>("viral");
 
   const fetchChannelVideos = useAction(api.youtube.fetchChannelVideos);
-
-  // Handle tab change with URL persistence
-  const handleTabChange = useCallback(
-    (value: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (value === "videos") {
-        params.delete("tab");
-      } else {
-        params.set("tab", value);
-      }
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    },
-    [router, pathname, searchParams]
-  );
 
   // Initial fetch when channel is available
   useEffect(() => {
@@ -187,167 +163,113 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
         <ErrorState error={videosError} onRetry={handleRetry} />
       )}
 
-      {/* Content */}
+      {/* Content - Insights Only */}
       {videosState === "success" && (
-        <Tabs
-          value={currentTab}
-          onValueChange={handleTabChange}
-          className="space-y-6"
-        >
-          {/* Tab Navigation */}
-          <TabsList className="h-10 w-full justify-start gap-1 bg-muted/50 p-1 sm:w-auto">
-            <TabsTrigger
-              value="videos"
-              className="gap-2 px-4 data-[state=active]:bg-card data-[state=active]:shadow-sm"
-            >
-              <IconVideo className="h-4 w-4" />
-              Videos
-            </TabsTrigger>
-            <TabsTrigger
-              value="insights"
-              className="gap-2 px-4 data-[state=active]:bg-card data-[state=active]:shadow-sm"
-            >
-              <IconChartBar className="h-4 w-4" />
-              Insights
-            </TabsTrigger>
-          </TabsList>
+        <div className="space-y-6">
+          {videos.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <>
+              {/* Statistics */}
+              <AnalyticsStats
+                videos={processedVideos}
+                avgViralScore={stats.avgViralScore}
+                avgPerformanceScore={stats.avgPerformanceScore}
+                shortsCount={stats.shortsCount}
+                longFormCount={stats.longFormCount}
+              />
 
-          {/* Videos Tab */}
-          <TabsContent value="videos" className="mt-0 space-y-6">
-            {videos.length === 0 ? (
-              <EmptyState />
-            ) : (
-              <>
-                {/* Video Grid */}
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {videos.map((video, index) => (
-                    <VideoCardWithScores
-                      key={video.id}
-                      video={video}
-                      index={index}
-                      variant="grid"
-                    />
-                  ))}
-                </div>
+              {/* Top Performers */}
+              <TopPerformers
+                topViral={stats.topViralVideo}
+                topPerformance={stats.topPerformanceVideo}
+              />
 
-                {/* Load More */}
-                {nextPageToken && (
-                  <LoadMoreButton
-                    onClick={handleLoadMore}
-                    isLoading={isLoadingMore}
-                  />
-                )}
-              </>
-            )}
-          </TabsContent>
-
-          {/* Insights Tab */}
-          <TabsContent value="insights" className="mt-0 space-y-6">
-            {videos.length === 0 ? (
-              <EmptyState />
-            ) : (
-              <>
-                {/* Statistics */}
-                <AnalyticsStats
-                  videos={processedVideos}
-                  avgViralScore={stats.avgViralScore}
-                  avgPerformanceScore={stats.avgPerformanceScore}
-                  shortsCount={stats.shortsCount}
-                  longFormCount={stats.longFormCount}
+              {/* Filters */}
+              <div className="rounded-xl border border-border/50 bg-card p-4 shadow-sm">
+                <AnalyticsFilters
+                  videoType={videoType}
+                  onVideoTypeChange={setVideoType}
+                  timeframe={timeframe}
+                  onTimeframeChange={setTimeframe}
+                  sortBy={sortBy}
+                  onSortByChange={setSortBy}
                 />
+              </div>
 
-                {/* Top Performers */}
-                <TopPerformers
-                  topViral={stats.topViralVideo}
-                  topPerformance={stats.topPerformanceVideo}
-                />
-
-                {/* Filters */}
-                <div className="rounded-xl border border-border/50 bg-card p-4 shadow-sm">
-                  <AnalyticsFilters
-                    videoType={videoType}
-                    onVideoTypeChange={setVideoType}
-                    timeframe={timeframe}
-                    onTimeframeChange={setTimeframe}
-                    sortBy={sortBy}
-                    onSortByChange={setSortBy}
-                  />
-                </div>
-
-                {/* Results count */}
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>
-                    Showing{" "}
-                    <span className="font-semibold text-foreground">
-                      {processedVideos.length}
-                    </span>{" "}
-                    {processedVideos.length === 1 ? "video" : "videos"}
-                    {videoType !== "all" && (
-                      <span className="ml-1">
-                        (
-                        {videoType === "short"
-                          ? "Shorts only"
-                          : "Long videos only"}
-                        )
-                      </span>
-                    )}
-                  </span>
-                  <span className="text-xs">
-                    Sorted by {currentSortLabel}
-                  </span>
-                </div>
-
-                {/* Video List */}
-                <AnimatePresence mode="wait">
-                  {processedVideos.length === 0 ? (
-                    <motion.div
-                      key="empty"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="flex min-h-[200px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border/50 bg-muted/10"
-                    >
-                      <IconMoodEmpty className="h-10 w-10 text-muted-foreground/50" />
-                      <div className="text-center">
-                        <p className="font-medium text-muted-foreground">
-                          No videos match filters
-                        </p>
-                        <p className="mt-1 text-sm text-muted-foreground/70">
-                          Try adjusting your filters or timeframe
-                        </p>
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="list"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="flex flex-col gap-4"
-                    >
-                      {processedVideos.map((video, index) => (
-                        <VideoCardWithScores
-                          key={video.id}
-                          video={video}
-                          index={index}
-                          variant="list"
-                        />
-                      ))}
-                    </motion.div>
+              {/* Results count */}
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>
+                  Showing{" "}
+                  <span className="font-semibold text-foreground">
+                    {processedVideos.length}
+                  </span>{" "}
+                  {processedVideos.length === 1 ? "video" : "videos"}
+                  {videoType !== "all" && (
+                    <span className="ml-1">
+                      (
+                      {videoType === "short"
+                        ? "Shorts only"
+                        : "Long videos only"}
+                      )
+                    </span>
                   )}
-                </AnimatePresence>
+                </span>
+                <span className="text-xs">
+                  Sorted by {currentSortLabel}
+                </span>
+              </div>
 
-                {/* Load More for Insights */}
-                {nextPageToken && (
-                  <LoadMoreButton
-                    onClick={handleLoadMore}
-                    isLoading={isLoadingMore}
-                  />
+              {/* Video List */}
+              <AnimatePresence mode="wait">
+                {processedVideos.length === 0 ? (
+                  <motion.div
+                    key="empty"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex min-h-[200px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border/50 bg-muted/10"
+                  >
+                    <IconMoodEmpty className="h-10 w-10 text-muted-foreground/50" />
+                    <div className="text-center">
+                      <p className="font-medium text-muted-foreground">
+                        No videos match filters
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground/70">
+                        Try adjusting your filters or timeframe
+                      </p>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="list"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex flex-col gap-4"
+                  >
+                    {processedVideos.map((video, index) => (
+                      <VideoCardWithScores
+                        key={video.id}
+                        video={video}
+                        index={index}
+                        variant="list"
+                      />
+                    ))}
+                  </motion.div>
                 )}
-              </>
-            )}
-          </TabsContent>
-        </Tabs>
+              </AnimatePresence>
+
+              {/* Load More */}
+              {nextPageToken && (
+                <LoadMoreButton
+                  onClick={handleLoadMore}
+                  isLoading={isLoadingMore}
+                />
+              )}
+            </>
+          )}
+        </div>
       )}
     </div>
   );
