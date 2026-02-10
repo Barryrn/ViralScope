@@ -50,7 +50,7 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
 
   // Analytics filter state
   const [videoType, setVideoType] = useState<VideoType>("all");
-  const [timeframe, setTimeframe] = useState<TimeframeValue>("30");
+  const [timeframe, setTimeframe] = useState<TimeframeValue>("all");
   const [sortBy, setSortBy] = useState<SortOption>("viral");
 
   const fetchChannelVideos = useAction(api.youtube.fetchChannelVideos);
