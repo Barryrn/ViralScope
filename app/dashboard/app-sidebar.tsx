@@ -7,6 +7,7 @@ import {
   IconHelp,
   IconSparkles,
   IconBrandYoutube,
+  IconChartBar,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/app/dashboard/nav-main"
@@ -35,6 +36,11 @@ const data = {
       title: "YouTube",
       url: "/dashboard/youtube",
       icon: IconBrandYoutube,
+    },
+    {
+      title: "Analytics",
+      url: "/dashboard/youtube/analytics",
+      icon: IconChartBar,
     },
     {
       title: "Pro Features",

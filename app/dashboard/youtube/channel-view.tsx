@@ -11,7 +11,9 @@ import {
   IconAlertCircle,
   IconRefresh,
   IconVideo,
+  IconChartBar,
 } from "@tabler/icons-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { ChannelData, ChannelVideosResult, VideoData } from "@/convex/youtubeTypes";
 import { cn } from "@/lib/utils";
@@ -126,6 +128,14 @@ export function ChannelView({ channel, className }: ChannelViewProps) {
               </p>
             </div>
           </div>
+
+          {/* Analytics Link */}
+          <Button asChild variant="outline" size="sm" className="gap-2">
+            <Link href={`/dashboard/youtube/analytics?channel=${channel.customUrl || channel.id}`}>
+              <IconChartBar className="h-4 w-4" />
+              Analyze Channel
+            </Link>
+          </Button>
         </div>
 
         {/* Videos Content */}
