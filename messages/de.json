@@ -41,6 +41,26 @@
       "subtitle": "Verbinde deinen YouTube-Kanal, um mit den Analysen zu beginnen."
     }
   },
+  "youtube": {
+    "dashboard": {
+      "liveAnalytics": "Live-Analysen",
+      "title": "YouTube-Analysen",
+      "description": "Geben Sie eine YouTube-Video-URL, einen Kanal oder eine Suchanfrage ein, um Engagement-Metriken und Leistungsdaten zu analysieren."
+    },
+    "input": {
+      "placeholder": "YouTube-URL, @Kanal oder Suche eingeben..."
+    },
+    "results": {
+      "ready": {
+        "title": "Bereit zur Analyse",
+        "description": "Fügen Sie oben einen YouTube-Link ein, um Videometriken, Kanalstatistiken oder Suchergebnisse abzurufen"
+      },
+      "error": {
+        "title": "Daten konnten nicht abgerufen werden",
+        "defaultMessage": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+      }
+    }
+  },
   "errors": {
     "pageNotFound": "Seite nicht gefunden"
   }

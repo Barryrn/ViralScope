@@ -3,9 +3,11 @@
 import { YouTubeInput } from "./youtube-input";
 import { YouTubeResults } from "./youtube-results";
 import { useYouTubeData } from "@/hooks/use-youtube-data";
+import { useTranslations } from "next-intl";
 
 export function YouTubeDashboard() {
   const youtubeData = useYouTubeData();
+  const t = useTranslations("youtube.dashboard");
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-4 lg:px-6">
@@ -23,16 +25,16 @@ export function YouTubeDashboard() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
             </span>
-            Live Analytics
+            {t("liveAnalytics")}
           </div>
 
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
             <span className="bg-gradient-to-r from-red-400 via-pink-400 to-red-400 bg-clip-text text-transparent">
-              YouTube Analytics
+              {t("title")}
             </span>
           </h1>
           <p className="mt-2 max-w-2xl text-muted-foreground">
-            Enter a YouTube video URL, channel, or search query to analyze engagement metrics and performance data.
+            {t("description")}
           </p>
         </div>
       </div>

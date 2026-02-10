@@ -10,6 +10,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 interface YouTubeInputProps {
   onSubmit: (input: string) => Promise<void>;
@@ -21,6 +22,7 @@ export function YouTubeInput({ onSubmit, isLoading, onReset }: YouTubeInputProps
   const [input, setInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const t = useTranslations("youtube.input");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +73,7 @@ export function YouTubeInput({ onSubmit, isLoading, onReset }: YouTubeInputProps
             onChange={(e) => setInput(e.target.value)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            placeholder="Paste YouTube URL, @channel, or search..."
+            placeholder={t("placeholder")}
             className="flex-1 border-0 bg-transparent text-base focus-visible:ring-0 focus-visible:ring-offset-0 md:text-lg"
             disabled={isLoading}
           />

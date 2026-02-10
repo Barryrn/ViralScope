@@ -8,6 +8,7 @@ import { LoadingSkeleton } from "./loading-skeleton";
 import { IconAlertCircle, IconSearch } from "@tabler/icons-react";
 import type { FetchState, YouTubeResult } from "@/hooks/use-youtube-data";
 import type { ParsedYouTubeInput } from "@/lib/youtube-utils";
+import { useTranslations } from "next-intl";
 
 interface YouTubeResultsProps {
   state: FetchState;
@@ -22,6 +23,8 @@ export function YouTubeResults({
   error,
   parsedInput,
 }: YouTubeResultsProps) {
+  const t = useTranslations("youtube.results");
+
   // Idle state - show placeholder
   if (state === "idle") {
     return (
@@ -34,10 +37,10 @@ export function YouTubeResults({
           <IconSearch className="h-8 w-8 text-muted-foreground" />
         </div>
         <h3 className="text-lg font-medium text-muted-foreground">
-          Ready to analyze
+          {t("ready.title")}
         </h3>
         <p className="mt-1 max-w-sm text-sm text-muted-foreground/70">
-          Paste a YouTube link above to fetch video metrics, channel stats, or search results
+          {t("ready.description")}
         </p>
       </motion.div>
     );
@@ -64,10 +67,10 @@ export function YouTubeResults({
           <IconAlertCircle className="h-6 w-6 text-destructive" />
         </div>
         <h3 className="text-lg font-medium text-destructive">
-          Unable to fetch data
+          {t("error.title")}
         </h3>
         <p className="mt-1 max-w-md text-sm text-muted-foreground">
-          {error || "An unexpected error occurred. Please try again."}
+          {error || t("error.defaultMessage")}
         </p>
       </motion.div>
     );

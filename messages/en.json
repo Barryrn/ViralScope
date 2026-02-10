@@ -41,6 +41,26 @@
       "subtitle": "Connect your YouTube channel to get started with analytics."
     }
   },
+  "youtube": {
+    "dashboard": {
+      "liveAnalytics": "Live Analytics",
+      "title": "YouTube Analytics",
+      "description": "Enter a YouTube video URL, channel, or search query to analyze engagement metrics and performance data."
+    },
+    "input": {
+      "placeholder": "Paste YouTube URL, @channel, or search..."
+    },
+    "results": {
+      "ready": {
+        "title": "Ready to analyze",
+        "description": "Paste a YouTube link above to fetch video metrics, channel stats, or search results"
+      },
+      "error": {
+        "title": "Unable to fetch data",
+        "defaultMessage": "An unexpected error occurred. Please try again."
+      }
+    }
+  },
   "errors": {
     "pageNotFound": "Page not found"
   }
