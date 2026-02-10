@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "motion/react";
 import { VideoCard } from "./video-card";
-import { ChannelCard } from "./channel-card";
+import { ChannelView } from "./channel-view";
 import { SearchResults } from "./search-results";
 import { LoadingSkeleton } from "./loading-skeleton";
 import { IconAlertCircle, IconSearch } from "@tabler/icons-react";
@@ -88,7 +88,7 @@ export function YouTubeResults({
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
           {result.type === "video" && <VideoCard video={result.data} />}
-          {result.type === "channel" && <ChannelCard channel={result.data} />}
+          {result.type === "channel" && <ChannelView channel={result.data} />}
           {result.type === "search" && <SearchResults data={result.data} />}
         </motion.div>
       </AnimatePresence>

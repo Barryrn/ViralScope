@@ -37,7 +37,8 @@ export default defineSchema({
     resourceType: v.union(
       v.literal("video"),
       v.literal("channel"),
-      v.literal("search")
+      v.literal("search"),
+      v.literal("channelVideos")
     ),
     data: v.any(),
     userId: v.string(),

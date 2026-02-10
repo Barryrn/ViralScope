@@ -87,3 +87,13 @@ export type SearchResult = {
   totalResults: number;
   nextPageToken?: string;
 };
+
+export type ChannelVideosResult = {
+  videos: VideoData[];
+  nextPageToken?: string;
+};
+
+export const channelVideosResultValidator = v.object({
+  videos: v.array(videoDataValidator),
+  nextPageToken: v.optional(v.string()),
+});

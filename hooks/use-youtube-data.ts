@@ -78,10 +78,21 @@ export function useYouTubeData(): UseYouTubeDataReturn {
         setState("success");
       } catch (err) {
         setState("error");
-        const message =
-          err instanceof Error
-            ? err.message
-            : "Failed to fetch YouTube data";
+        let message = "Failed to fetch YouTube data";
+
+        if (err instanceof Error) {
+          // Handle Convex connection errors specifically
+          if (err.message.includes("Connection lost") || err.message.includes("in flight")) {
+            message = "Connection interrupted. Please check your network and try again.";
+          } else if (err.message.includes("not found") || err.message.includes("not be found")) {
+            message = parsed.type === "channel"
+              ? "Channel not found. Please check the channel name or URL."
+              : "Video not found. Please check the URL.";
+          } else {
+            message = err.message;
+          }
+        }
+
         setError(message);
         handleError(err, {
           showToast: true,

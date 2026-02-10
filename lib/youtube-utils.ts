@@ -19,6 +19,9 @@ const CHANNEL_URL_PATTERNS = [
   { pattern: /youtube\.com\/user\/([a-zA-Z0-9_.-]+)/, isHandle: true },
 ];
 
+// Pattern for direct @handle input (without URL)
+const DIRECT_HANDLE_REGEX = /^@([a-zA-Z0-9_.-]+)$/;
+
 export type ParsedYouTubeInput =
   | { type: "video"; id: string }
   | { type: "channel"; id: string; isHandle: boolean }
@@ -38,6 +41,12 @@ export function parseYouTubeInput(input: string): ParsedYouTubeInput {
   // Check for direct channel ID (UC + 22 characters)
   if (CHANNEL_ID_REGEX.test(trimmed)) {
     return { type: "channel", id: trimmed, isHandle: false };
+  }
+
+  // Check for direct @handle input (e.g., "@MrBeast")
+  const handleMatch = trimmed.match(DIRECT_HANDLE_REGEX);
+  if (handleMatch && handleMatch[1]) {
+    return { type: "channel", id: handleMatch[1], isHandle: true };
   }
 
   // Parse video URLs

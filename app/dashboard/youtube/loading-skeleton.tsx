@@ -149,3 +149,33 @@ function SearchSkeleton() {
     </div>
   );
 }
+
+export function ChannelVideosSkeleton() {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {[...Array(12)].map((_, i) => (
+        <Card key={i} className="overflow-hidden border-border/50 bg-card/50">
+          {/* Thumbnail */}
+          <Skeleton className="aspect-video w-full rounded-none" />
+
+          {/* Content */}
+          <div className="p-4">
+            {/* Title */}
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="mt-1 h-4 w-3/4" />
+
+            {/* Publish date */}
+            <Skeleton className="mt-2 h-3 w-20" />
+
+            {/* Engagement metrics */}
+            <div className="mt-3 flex items-center gap-3">
+              <Skeleton className="h-4 w-14" />
+              <Skeleton className="h-4 w-12" />
+              <Skeleton className="h-4 w-12" />
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}

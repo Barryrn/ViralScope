@@ -3,12 +3,13 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { logActionError, getUserFriendlyError } from "./withErrorHandling";
 import { ConvexAppError } from "./errors";
-import type { VideoData, ChannelData, SearchResult } from "./youtubeTypes";
+import type { VideoData, ChannelData, SearchResult, ChannelVideosResult } from "./youtubeTypes";
 
 // Cache duration constants
 const VIDEO_CACHE_MS = 60 * 60 * 1000; // 1 hour
 const CHANNEL_CACHE_MS = 6 * 60 * 60 * 1000; // 6 hours
 const SEARCH_CACHE_MS = 30 * 60 * 1000; // 30 minutes
+const CHANNEL_VIDEOS_CACHE_MS = 60 * 60 * 1000; // 1 hour
 
 const YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3";
 
@@ -152,6 +153,9 @@ export const fetchChannelData = action({
     }
 
     try {
+      let data: any = null;
+
+      // First, try the direct channel lookup
       const url = new URL(`${YOUTUBE_API_BASE}/channels`);
       url.searchParams.set("part", "snippet,statistics");
       url.searchParams.set("key", apiKey);
@@ -184,9 +188,37 @@ export const fetchChannelData = action({
         );
       }
 
-      const data = await response.json();
+      data = await response.json();
 
-      if (!data.items || data.items.length === 0) {
+      // If forHandle didn't find the channel, try searching for it
+      if ((!data.items || data.items.length === 0) && handle) {
+        const searchUrl = new URL(`${YOUTUBE_API_BASE}/search`);
+        searchUrl.searchParams.set("part", "snippet");
+        searchUrl.searchParams.set("type", "channel");
+        searchUrl.searchParams.set("q", handle);
+        searchUrl.searchParams.set("maxResults", "1");
+        searchUrl.searchParams.set("key", apiKey);
+
+        const searchResponse = await fetch(searchUrl.toString());
+        if (searchResponse.ok) {
+          const searchData = await searchResponse.json();
+          if (searchData.items && searchData.items.length > 0) {
+            // Get full channel data using the found channel ID
+            const foundChannelId = searchData.items[0].snippet.channelId;
+            const channelUrl = new URL(`${YOUTUBE_API_BASE}/channels`);
+            channelUrl.searchParams.set("part", "snippet,statistics");
+            channelUrl.searchParams.set("id", foundChannelId);
+            channelUrl.searchParams.set("key", apiKey);
+
+            const channelResponse = await fetch(channelUrl.toString());
+            if (channelResponse.ok) {
+              data = await channelResponse.json();
+            }
+          }
+        }
+      }
+
+      if (!data?.items || data.items.length === 0) {
         throw new ConvexAppError("Channel not found", {
           category: "validation",
           severity: "low",
@@ -338,6 +370,155 @@ export const searchVideos = action({
   },
 });
 
+// Fetch videos for a specific channel
+export const fetchChannelVideos = action({
+  args: {
+    channelId: v.string(),
+    maxResults: v.optional(v.number()),
+    pageToken: v.optional(v.string()),
+  },
+  handler: async (ctx, { channelId, maxResults = 12, pageToken }): Promise<ChannelVideosResult> => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexAppError("Authentication required", {
+        category: "authentication",
+        severity: "medium",
+        userMessage: "Please sign in to use YouTube analytics.",
+      });
+    }
+
+    const apiKey = process.env.YouTube_Key;
+    if (!apiKey) {
+      throw new ConvexAppError("YouTube API key not configured", {
+        category: "youtube_api",
+        severity: "critical",
+        userMessage: "YouTube integration is not configured. Please contact support.",
+      });
+    }
+
+    try {
+      // Derive uploads playlist ID from channel ID (UC... -> UU...)
+      const uploadsPlaylistId = "UU" + channelId.slice(2);
+
+      // Fetch playlist items
+      const playlistUrl = new URL(`${YOUTUBE_API_BASE}/playlistItems`);
+      playlistUrl.searchParams.set("part", "snippet");
+      playlistUrl.searchParams.set("playlistId", uploadsPlaylistId);
+      playlistUrl.searchParams.set("maxResults", maxResults.toString());
+      playlistUrl.searchParams.set("key", apiKey);
+
+      if (pageToken) {
+        playlistUrl.searchParams.set("pageToken", pageToken);
+      }
+
+      const playlistResponse = await fetch(playlistUrl.toString());
+
+      if (!playlistResponse.ok) {
+        const errorData = await playlistResponse.json().catch(() => ({}));
+
+        if (playlistResponse.status === 403) {
+          throw new ConvexAppError("YouTube API quota exceeded", {
+            category: "youtube_api",
+            severity: "high",
+            userMessage: "API rate limit reached. Please try again later.",
+          });
+        }
+
+        throw new ConvexAppError(
+          errorData.error?.message || `YouTube API error: ${playlistResponse.status}`,
+          {
+            category: "youtube_api",
+            severity: "medium",
+            metadata: { status: playlistResponse.status, error: errorData },
+          }
+        );
+      }
+
+      const playlistData = await playlistResponse.json();
+      const playlistItems = playlistData.items || [];
+
+      if (playlistItems.length === 0) {
+        return { videos: [], nextPageToken: undefined };
+      }
+
+      // Extract video IDs
+      const videoIds = playlistItems.map(
+        (item: any) => item.snippet.resourceId.videoId
+      );
+
+      // Batch fetch video statistics
+      const videosUrl = new URL(`${YOUTUBE_API_BASE}/videos`);
+      videosUrl.searchParams.set("part", "snippet,statistics,contentDetails");
+      videosUrl.searchParams.set("id", videoIds.join(","));
+      videosUrl.searchParams.set("key", apiKey);
+
+      const videosResponse = await fetch(videosUrl.toString());
+
+      if (!videosResponse.ok) {
+        const errorData = await videosResponse.json().catch(() => ({}));
+        throw new ConvexAppError(
+          errorData.error?.message || `YouTube API error: ${videosResponse.status}`,
+          {
+            category: "youtube_api",
+            severity: "medium",
+            metadata: { status: videosResponse.status, error: errorData },
+          }
+        );
+      }
+
+      const videosData = await videosResponse.json();
+
+      // Map video data
+      const videos: VideoData[] = (videosData.items || []).map((video: any) => ({
+        id: video.id,
+        title: video.snippet.title,
+        description: video.snippet.description,
+        thumbnailUrl:
+          video.snippet.thumbnails.maxres?.url ||
+          video.snippet.thumbnails.high?.url ||
+          video.snippet.thumbnails.default?.url ||
+          "",
+        channelId: video.snippet.channelId,
+        channelTitle: video.snippet.channelTitle,
+        publishedAt: video.snippet.publishedAt,
+        viewCount: parseInt(video.statistics?.viewCount || "0", 10),
+        likeCount: parseInt(video.statistics?.likeCount || "0", 10),
+        commentCount: parseInt(video.statistics?.commentCount || "0", 10),
+        duration: video.contentDetails?.duration || "PT0S",
+        tags: video.snippet.tags,
+      }));
+
+      const result: ChannelVideosResult = {
+        videos,
+        nextPageToken: playlistData.nextPageToken,
+      };
+
+      // Cache the result
+      const cacheId = `channelVideos:${channelId}:${pageToken || "first"}`;
+      await ctx.runMutation(internal.youtube.cacheResult, {
+        resourceId: cacheId,
+        resourceType: "channelVideos",
+        data: result,
+        userId: identity.subject,
+        cacheDurationMs: CHANNEL_VIDEOS_CACHE_MS,
+      });
+
+      return result;
+    } catch (error) {
+      if (error instanceof ConvexAppError) {
+        throw error;
+      }
+      await logActionError(ctx, error, {
+        functionName: "youtube.fetchChannelVideos",
+        category: "youtube_api",
+        severity: "medium",
+        metadata: { channelId, maxResults },
+      });
+      throw getUserFriendlyError(error, "youtube_api");
+    }
+  },
+});
+
 // Internal mutation to cache results
 export const cacheResult = internalMutation({
   args: {
@@ -345,7 +526,8 @@ export const cacheResult = internalMutation({
     resourceType: v.union(
       v.literal("video"),
       v.literal("channel"),
-      v.literal("search")
+      v.literal("search"),
+      v.literal("channelVideos")
     ),
     data: v.any(),
     userId: v.string(),
