@@ -1,87 +1,46 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+SaaS starter kit with Next.js 15, Convex, Clerk auth/billing, and YouTube analytics.
 
-## Development Commands
+## Commands
 
 ```bash
-npm run dev      # Start dev server with Turbopack (fast HMR)
-npm run build    # Production build
-npm run start    # Start production server
-npm run lint     # Run ESLint
-npx convex dev   # Run Convex backend in development mode (required alongside npm run dev)
+npm run dev       # Next.js dev server (Turbopack)
+npx convex dev    # Convex backend (run in separate terminal)
+npm run build     # Production build
+npm run lint      # ESLint
 ```
 
-**Note:** For local development, you need both the Next.js dev server and Convex dev running simultaneously in separate terminals.
+## Architecture
 
-## Architecture Overview
+**Stack:** Next.js 15 (App Router), React 19, TypeScript, TailwindCSS v4, shadcn/ui, Convex, Clerk, Sentry
 
-This is a **SaaS starter kit** built with Next.js 15 (App Router), Convex (real-time database), Clerk (authentication + billing), and Sentry (error tracking).
+**Routes:**
+- `/` - Landing page (`/(landing)` route group)
+- `/dashboard/*` - Protected (Clerk middleware)
+- `/dashboard/youtube` - YouTube analytics
+- `/dashboard/payment-gated` - Subscription-gated
 
-### Tech Stack
-- **Frontend:** Next.js 15, React 19, TypeScript, TailwindCSS v4, shadcn/ui (Radix UI)
-- **Backend:** Convex serverless functions and real-time database
-- **Auth & Billing:** Clerk (integrated with Convex via JWT template named "convex")
-- **Error Tracking:** Sentry with custom Convex-based error logging
-- **i18n:** next-intl (English and German support)
+**Backend:** All in `/convex/` - schema in `schema.ts`, webhooks in `http.ts`
 
-### Route Structure
-- `/` - Public landing page (route group: `/(landing)`)
-- `/dashboard/*` - Protected routes (Clerk middleware authentication)
-- `/dashboard/youtube` - YouTube channel analytics
-- `/dashboard/payment-gated` - Subscription-required content
-- `/api/error-sync` - Sentry sync endpoint (bearer token auth, not Clerk)
+**Components:** `/components/ui/` (shadcn), animation libs in `/components/magicui|motion-primitives|react-bits|kokonutui/`
 
-### Next.js Image Configuration
-YouTube images require allowed hostnames in `next.config.ts`:
-- `yt3.ggpht.com` - YouTube channel avatars
-- `i.ytimg.com` - YouTube video thumbnails
+## Key Patterns
 
-### Convex Backend (`/convex/`)
-All backend logic lives in Convex. Key patterns:
-- **Schema:** Defined in `schema.ts` - tables: `users`, `paymentAttempts`, `errorLogs`
-- **User sync:** Clerk webhooks → Convex HTTP router (`http.ts`) → user upsert/delete
-- **Internal vs Public functions:** Internal mutations for webhook handlers; public queries/mutations for client access
-- **Error handling:** Custom `ConvexAppError` class with categories (authentication, database, webhook, payment, validation) and severity levels
+**Clerk-Convex Integration:**
+- JWT template named "convex" required in Clerk dashboard
+- `CLERK_WEBHOOK_SECRET` set in Convex dashboard (not .env.local)
+- Webhook endpoint: `/clerk-users-webhook`
 
-### Clerk-Convex Integration
-1. Clerk JWT template named "convex" must exist in Clerk dashboard
-2. `NEXT_PUBLIC_CLERK_FRONTEND_API_URL` = JWT issuer URL from that template
-3. Webhooks sync user data: `/clerk-users-webhook` endpoint in Convex HTTP router
-4. `CLERK_WEBHOOK_SECRET` must be set in **Convex dashboard** environment variables (not .env.local)
+**Error Logging:** Convex `errorLogs` table → cron syncs to Sentry via `/api/error-sync`
 
-### Authentication Flow
-- `middleware.ts` protects `/dashboard(.*)` routes via Clerk
-- Public API routes (like `/api/error-sync`) bypass Clerk middleware and use their own auth
-- Convex functions access user via `ctx.auth.getUserIdentity()` which returns Clerk JWT claims
+**Images:** YouTube hostnames configured in `next.config.ts` (`yt3.ggpht.com`, `i.ytimg.com`)
 
-### Error Logging System
-Two-phase error tracking:
-1. Errors in Convex functions → logged to `errorLogs` table via `logMutationError()`
-2. Cron job calls `/api/error-sync` → fetches unsent errors → sends to Sentry → marks as synced
+## Environment
 
-### UI Components
-- Primary components: `/components/ui/` (shadcn/ui style: "new-york")
-- Animation libraries in separate directories: `/components/magicui/`, `/components/motion-primitives/`, `/components/react-bits/`, `/components/kokonutui/`
-- Utility function: `cn()` from `lib/utils.ts` (clsx + tailwind-merge)
+See `.env.example` for required variables. Convex secrets go in Convex dashboard.
 
-### Key Providers (in root layout)
-- `ConvexClientProvider` - Wraps Convex + Clerk providers together
-- `ThemeProvider` - Dark/light mode via next-themes
-- `NextIntlClientProvider` - i18n support
+## Resources
 
-## Environment Variables
-
-Required variables (see `.env.example`):
-- `CONVEX_DEPLOYMENT`, `NEXT_PUBLIC_CONVEX_URL` - Convex connection
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` - Clerk auth
-- `NEXT_PUBLIC_CLERK_FRONTEND_API_URL` - JWT issuer (from Clerk JWT template)
-- `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN` - Sentry tracking
-
-Convex-specific secrets (set in Convex dashboard, NOT .env.local):
-- `CLERK_WEBHOOK_SECRET` - Webhook validation
-
-## AI Resources
-
-- **`/.claude/skills/`** - Claude Code skills (architect, backend-dev, devops, frontend-design, frontend-eng, git-pushing, performance, security, skill-creator, testing, ui-ux). Each skill has a `SKILL.md` with name/description in YAML frontmatter.
-- **`/ai/techstack/`** - Technology-specific documentation for the stack (Clerk, Convex, Next.js, Sentry, shadcn, TailwindCSS, Vercel).
+- Tech docs: `/ai/techstack/`
+- Skills: `/.claude/skills/`
