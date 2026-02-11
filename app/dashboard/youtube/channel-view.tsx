@@ -172,14 +172,20 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
     return option?.days ?? null;
   }, [timeframe]);
 
-  const processedVideos = useMemo(() => {
-    const filtered = filterAndProcessVideos(videos, videoType, timeframeDays, weights);
+  // Videos filtered by timeframe - used for stats only
+  const statsVideos = useMemo(() => {
+    return filterAndProcessVideos(videos, videoType, timeframeDays, weights);
+  }, [videos, videoType, timeframeDays, weights]);
+
+  // All videos for display - NO timeframe filter so Show More works
+  const displayedVideos = useMemo(() => {
+    const filtered = filterAndProcessVideos(videos, videoType, null, weights);
     return sortVideos(filtered, sortBy);
-  }, [videos, videoType, timeframeDays, sortBy, weights]);
+  }, [videos, videoType, sortBy, weights]);
 
   const stats = useMemo(
-    () => getVideoStats(processedVideos),
-    [processedVideos]
+    () => getVideoStats(statsVideos),
+    [statsVideos]
   );
 
   // Get the current sort label for display
@@ -212,9 +218,9 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
             <EmptyState />
           ) : (
             <>
-              {/* Statistics */}
+              {/* Statistics - uses timeframe-filtered videos */}
               <AnalyticsStats
-                videos={processedVideos}
+                videos={statsVideos}
                 avgViralScore={stats.avgViralScore}
                 avgPerformanceScore={stats.avgPerformanceScore}
                 shortsCount={stats.shortsCount}
@@ -247,13 +253,9 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
                 <span>
                   Showing{" "}
                   <span className="font-semibold text-foreground">
-                    {processedVideos.length}
+                    {displayedVideos.length}
                   </span>{" "}
-                  of{" "}
-                  <span className="font-semibold text-foreground">
-                    {videos.length}
-                  </span>{" "}
-                  fetched {videos.length === 1 ? "video" : "videos"}
+                  {displayedVideos.length === 1 ? "video" : "videos"}
                   {videoType !== "all" && (
                     <span className="ml-1">
                       (
@@ -271,7 +273,7 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
 
               {/* Video List */}
               <AnimatePresence mode="wait">
-                {processedVideos.length === 0 ? (
+                {displayedVideos.length === 0 ? (
                   <motion.div
                     key="empty"
                     initial={{ opacity: 0 }}
@@ -285,7 +287,7 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
                         No videos match filters
                       </p>
                       <p className="mt-1 text-sm text-muted-foreground/70">
-                        Try adjusting your filters or timeframe
+                        Try adjusting your video type filter
                       </p>
                     </div>
                   </motion.div>
@@ -297,7 +299,7 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
                     exit={{ opacity: 0 }}
                     className="flex flex-col gap-4"
                   >
-                    {processedVideos.map((video, index) => (
+                    {displayedVideos.map((video, index) => (
                       <VideoCardWithScores
                         key={video.id}
                         video={video}
