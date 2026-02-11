@@ -11,7 +11,6 @@ import {
   IconFlame,
   IconChartBar,
   IconBolt,
-  IconTrendingUp,
   IconExternalLink,
 } from "@tabler/icons-react";
 import { SaveButton } from "./save-button";
@@ -93,48 +92,49 @@ function GridCard({
       transition={{ duration: 0.3, delay: index * 0.05 }}
       className={cn("group", className)}
     >
-      <a
-        href={`https://youtube.com/watch?v=${video.id}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block"
-      >
-        <div className="overflow-hidden rounded-xl border border-border/50 bg-card shadow-sm transition-all duration-200 hover:border-border hover:shadow-md">
-          {/* Thumbnail */}
-          <div className="relative aspect-video">
-            <Image
-              src={video.thumbnailUrl}
-              alt={video.title}
-              fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            />
+      <div className="relative">
+        {/* Save button - top right of whole card */}
+        <SaveButton
+          video={video}
+          className="absolute right-2 top-2 z-10 opacity-0 transition-opacity group-hover:opacity-100"
+        />
 
-            {/* Duration badge */}
-            <Badge
-              variant="secondary"
-              className="absolute bottom-2 right-2 border-0 bg-black/80 px-1.5 py-0.5 font-mono text-[10px] text-white"
-            >
-              {formatDuration(video.duration)}
-            </Badge>
+        <a
+          href={`https://youtube.com/watch?v=${video.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block"
+        >
+          <div className="overflow-hidden rounded-xl border border-border/50 bg-card shadow-sm transition-all duration-200 hover:border-border hover:shadow-md">
+            {/* Thumbnail */}
+            <div className="relative aspect-video">
+              <Image
+                src={video.thumbnailUrl}
+                alt={video.title}
+                fill
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              />
 
-            {/* Video type badge */}
-            {video.videoType === "short" && (
+              {/* Duration badge */}
               <Badge
                 variant="secondary"
-                className="absolute left-2 top-2 border-0 bg-rose-500 px-1.5 py-0.5 text-[10px] text-white"
+                className="absolute bottom-2 right-2 border-0 bg-black/80 px-1.5 py-0.5 font-mono text-[10px] text-white"
               >
-                <IconBolt className="mr-0.5 h-2.5 w-2.5" />
-                Short
+                {formatDuration(video.duration)}
               </Badge>
-            )}
 
-            {/* Save button */}
-            <SaveButton
-              video={video}
-              className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100"
-            />
-          </div>
+              {/* Video type badge */}
+              {video.videoType === "short" && (
+                <Badge
+                  variant="secondary"
+                  className="absolute left-2 top-2 border-0 bg-rose-500 px-1.5 py-0.5 text-[10px] text-white"
+                >
+                  <IconBolt className="mr-0.5 h-2.5 w-2.5" />
+                  Short
+                </Badge>
+              )}
+            </div>
 
           {/* Content */}
           <div className="p-3">
@@ -162,6 +162,7 @@ function GridCard({
           </div>
         </div>
       </a>
+      </div>
     </motion.div>
   );
 }
@@ -185,7 +186,13 @@ function ListCard({
       transition={{ duration: 0.3, delay: index * 0.05 }}
       className={cn("group", className)}
     >
-      <div className="overflow-hidden rounded-xl border border-border/50 bg-card shadow-sm transition-all duration-200 hover:border-border hover:shadow-md">
+      <div className="relative overflow-hidden rounded-xl border border-border/50 bg-card shadow-sm transition-all duration-200 hover:border-border hover:shadow-md">
+        {/* Save button - top right of whole card */}
+        <SaveButton
+          video={video}
+          className="absolute right-2 top-2 z-10 h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
+        />
+
         <div className="flex flex-col sm:flex-row">
           {/* Thumbnail */}
           <div className="relative aspect-video sm:aspect-auto sm:h-32 sm:w-56 lg:h-36 lg:w-64">
@@ -222,17 +229,11 @@ function ListCard({
               href={`https://youtube.com/watch?v=${video.id}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="absolute right-10 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition-opacity hover:bg-black/70 group-hover:opacity-100"
+              className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition-opacity hover:bg-black/70 group-hover:opacity-100"
               onClick={(e) => e.stopPropagation()}
             >
               <IconExternalLink className="h-3.5 w-3.5" />
             </a>
-
-            {/* Save button */}
-            <SaveButton
-              video={video}
-              className="absolute right-2 top-2 h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
-            />
           </div>
 
           {/* Content */}
@@ -279,15 +280,6 @@ function ListCard({
                 score={video.performanceScore}
                 variant="performance"
               />
-
-              {/* Velocity */}
-              <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
-                <IconTrendingUp className="h-3.5 w-3.5" />
-                <span className="font-medium text-foreground">
-                  {formatNumber(Math.round(video.velocity))}
-                </span>
-                <span>/day</span>
-              </div>
             </div>
           </div>
         </div>
