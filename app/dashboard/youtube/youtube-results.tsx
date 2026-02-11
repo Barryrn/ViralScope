@@ -2,7 +2,6 @@
 
 import { motion, AnimatePresence } from "motion/react";
 import { ChannelView } from "./channel-view";
-import { SearchResults } from "./search-results";
 import { LoadingSkeleton } from "./loading-skeleton";
 import { VideoCardWithScores } from "./components/video-card-with-scores";
 import { IconAlertCircle, IconSearch } from "@tabler/icons-react";
@@ -52,7 +51,7 @@ export function YouTubeResults({
   if (state === "loading") {
     return (
       <LoadingSkeleton
-        type={parsedInput?.type === "channel" ? "channel" : parsedInput?.type === "search" ? "search" : "video"}
+        type={parsedInput?.type === "channel" ? "channel" : "video"}
       />
     );
   }
@@ -95,7 +94,6 @@ export function YouTubeResults({
           {result.type === "channel" && (
             <ChannelView channel={result.data} onReset={onReset} />
           )}
-          {result.type === "search" && <SearchResults data={result.data} />}
         </motion.div>
       </AnimatePresence>
     );

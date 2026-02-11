@@ -48,4 +48,20 @@ export default defineSchema({
     .index("byResourceId", ["resourceId"])
     .index("byUserId", ["userId"])
     .index("byExpiresAt", ["expiresAt"]),
+
+  // User settings for score weight customization
+  userSettings: defineTable({
+    userId: v.id("users"),
+
+    // Viral Score Weights (must sum to 1.0)
+    viralVelocityWeight: v.number(), // Default: 0.6
+    viralEngagementWeight: v.number(), // Default: 0.25
+    viralCommentWeight: v.number(), // Default: 0.15
+
+    // Performance Score Weights (must sum to 1.0)
+    perfEngagementWeight: v.number(), // Default: 0.75
+    perfCommentWeight: v.number(), // Default: 0.25
+
+    updatedAt: v.number(),
+  }).index("byUserId", ["userId"]),
 });

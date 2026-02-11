@@ -65,8 +65,8 @@ export function parseYouTubeInput(input: string): ParsedYouTubeInput {
     }
   }
 
-  // Default to search query
-  return { type: "search", query: trimmed };
+  // Default: treat plain text as channel handle lookup
+  return { type: "channel", id: trimmed, isHandle: true };
 }
 
 /**

@@ -7,6 +7,54 @@ import { parseDurationToSeconds } from "./youtube-utils";
 export { parseDurationToSeconds };
 
 /**
+ * Score weight configuration
+ */
+export interface ScoreWeights {
+  viral: {
+    velocity: number;
+    engagement: number;
+    comment: number;
+  };
+  performance: {
+    engagement: number;
+    comment: number;
+  };
+}
+
+/**
+ * Default weight values
+ */
+export const DEFAULT_WEIGHTS: ScoreWeights = {
+  viral: {
+    velocity: 0.6,
+    engagement: 0.25,
+    comment: 0.15,
+  },
+  performance: {
+    engagement: 0.75,
+    comment: 0.25,
+  },
+};
+
+/**
+ * Raw metrics before normalization
+ */
+interface RawMetrics {
+  engagementRate: number;
+  commentRate: number;
+  velocity: number;
+}
+
+/**
+ * Normalization bounds for min-max normalization
+ */
+interface NormalizationBounds {
+  engagement: { min: number; max: number };
+  comment: { min: number; max: number };
+  velocity: { min: number; max: number };
+}
+
+/**
  * Video classification based on duration
  * Shorts: <= 60 seconds (YouTube Shorts spec)
  * Long-form: > 60 seconds
@@ -87,31 +135,126 @@ export function calculateCommentRate(views: number, comments: number): number {
 }
 
 /**
- * Calculate Velocity
- * views / days_since_publish
+ * Calculate Velocity (using log scale for better normalization)
+ * log(views / days_since_upload + 1)
  */
 export function calculateVelocity(
   views: number,
   publishedAt: string
 ): number {
   const days = daysSincePublish(publishedAt);
-  return views / days;
+  return Math.log(views / days + 1);
 }
 
 /**
- * Calculate Viral Score
+ * Min-max normalization
+ * Returns 0.5 if min equals max (avoid division by zero)
+ */
+function normalize(value: number, min: number, max: number): number {
+  if (max === min) return 0.5;
+  return (value - min) / (max - min);
+}
+
+/**
+ * Calculate raw metrics for a single video
+ */
+function calculateRawMetrics(video: VideoData): RawMetrics {
+  return {
+    engagementRate: calculateEngagementRate(
+      video.viewCount,
+      video.likeCount,
+      video.commentCount
+    ),
+    commentRate: calculateCommentRate(video.viewCount, video.commentCount),
+    velocity: calculateVelocity(video.viewCount, video.publishedAt),
+  };
+}
+
+/**
+ * Get normalization bounds from a set of videos
+ */
+function getNormalizationBounds(videos: VideoData[]): NormalizationBounds {
+  if (videos.length === 0) {
+    return {
+      engagement: { min: 0, max: 1 },
+      comment: { min: 0, max: 1 },
+      velocity: { min: 0, max: 1 },
+    };
+  }
+
+  const metrics = videos.map((v) => calculateRawMetrics(v));
+
+  const engagementRates = metrics.map((m) => m.engagementRate);
+  const commentRates = metrics.map((m) => m.commentRate);
+  const velocities = metrics.map((m) => m.velocity);
+
+  return {
+    engagement: {
+      min: Math.min(...engagementRates),
+      max: Math.max(...engagementRates),
+    },
+    comment: {
+      min: Math.min(...commentRates),
+      max: Math.max(...commentRates),
+    },
+    velocity: {
+      min: Math.min(...velocities),
+      max: Math.max(...velocities),
+    },
+  };
+}
+
+/**
+ * Calculate Viral Score with normalized metrics and weights
  *
  * Measures momentum and current traction.
  * Answers: "What is blowing up right now?"
  *
  * Formula:
- * Viral Score = 100 × [
- *   0.6 × engagement_rate +
- *   0.3 × comment_rate +
- *   0.1 × log10(velocity + 1)
- * ]
+ * Viral Score = 100 × (vel_weight × vel_norm + eng_weight × eng_norm + comm_weight × comm_norm)
  *
  * High score means: strong interaction, fast growth, currently trending
+ */
+function calculateViralScoreFromNormalized(
+  engNorm: number,
+  commNorm: number,
+  velNorm: number,
+  weights: ScoreWeights["viral"]
+): number {
+  const score =
+    100 *
+    (weights.velocity * velNorm +
+      weights.engagement * engNorm +
+      weights.comment * commNorm);
+
+  return Math.min(Math.max(score, 0), 100);
+}
+
+/**
+ * Calculate Performance Score with normalized metrics and weights
+ *
+ * Measures overall success and content quality.
+ * Answers: "Which videos are consistently strong?"
+ *
+ * Formula:
+ * Performance Score = 100 × (eng_weight × eng_norm + comm_weight × comm_norm)
+ *
+ * High score means: good engagement, solid reach
+ */
+function calculatePerformanceScoreFromNormalized(
+  engNorm: number,
+  commNorm: number,
+  weights: ScoreWeights["performance"]
+): number {
+  const score =
+    100 * (weights.engagement * engNorm + weights.comment * commNorm);
+
+  return Math.min(Math.max(score, 0), 100);
+}
+
+/**
+ * @deprecated Use processVideosWithScores for batch processing with proper normalization
+ * Legacy function for single video score calculation (uses fixed normalization)
  */
 export function calculateViralScore(video: VideoData): number {
   const engagementRate = calculateEngagementRate(
@@ -122,38 +265,22 @@ export function calculateViralScore(video: VideoData): number {
   const commentRate = calculateCommentRate(video.viewCount, video.commentCount);
   const velocity = calculateVelocity(video.viewCount, video.publishedAt);
 
-  // Normalize engagement rate (typical range 0-0.1, so multiply by 10 for 0-1 range)
+  // Legacy fixed normalization
   const normalizedEngagement = Math.min(engagementRate * 10, 1);
-
-  // Normalize comment rate (typical range 0-0.01, so multiply by 100 for 0-1 range)
   const normalizedCommentRate = Math.min(commentRate * 100, 1);
+  const velocityComponent = Math.min(velocity / 15, 1); // Adjusted for log scale
 
-  // Velocity component using log scale (normalize to 0-1 range)
-  // Velocity of 1M views/day → log10(1000001) ≈ 6, divide by 7 for normalization
-  const velocityComponent = Math.min(Math.log10(velocity + 1) / 7, 1);
-
-  const score =
-    100 *
-    (0.6 * normalizedEngagement +
-      0.3 * normalizedCommentRate +
-      0.1 * velocityComponent);
-
-  return Math.min(Math.max(score, 0), 100);
+  return calculateViralScoreFromNormalized(
+    normalizedEngagement,
+    normalizedCommentRate,
+    velocityComponent,
+    DEFAULT_WEIGHTS.viral
+  );
 }
 
 /**
- * Calculate Performance Score
- *
- * Measures overall success and content quality.
- * Answers: "Which videos are consistently strong?"
- *
- * Formula:
- * Performance Score = 100 × [
- *   0.7 × engagement_rate +
- *   0.3 × (view_factor / 10)
- * ]
- *
- * High score means: good engagement, solid reach, not dominated by huge channels
+ * @deprecated Use processVideosWithScores for batch processing with proper normalization
+ * Legacy function for single video score calculation (uses fixed normalization)
  */
 export function calculatePerformanceScore(video: VideoData): number {
   const engagementRate = calculateEngagementRate(
@@ -161,21 +288,17 @@ export function calculatePerformanceScore(video: VideoData): number {
     video.likeCount,
     video.commentCount
   );
+  const commentRate = calculateCommentRate(video.viewCount, video.commentCount);
 
-  // View factor: log10(views + 1)
-  // Range: 0 (1 view) to ~10 (10B views)
-  const viewFactor = Math.log10(video.viewCount + 1);
-
-  // Normalize engagement rate (typical range 0-0.1, so multiply by 10 for 0-1 range)
+  // Legacy fixed normalization
   const normalizedEngagement = Math.min(engagementRate * 10, 1);
+  const normalizedCommentRate = Math.min(commentRate * 100, 1);
 
-  // Normalize view factor (divide by 10 as per formula, then cap at 1)
-  const normalizedViewFactor = Math.min(viewFactor / 10, 1);
-
-  const score =
-    100 * (0.7 * normalizedEngagement + 0.3 * normalizedViewFactor);
-
-  return Math.min(Math.max(score, 0), 100);
+  return calculatePerformanceScoreFromNormalized(
+    normalizedEngagement,
+    normalizedCommentRate,
+    DEFAULT_WEIGHTS.performance
+  );
 }
 
 /**
@@ -206,7 +329,67 @@ export interface VideoWithScores extends VideoData {
 }
 
 /**
- * Process a video and add all calculated metrics
+ * Process multiple videos with proper min-max normalization and configurable weights
+ * This is the recommended function for calculating scores
+ */
+export function processVideosWithScores(
+  videos: VideoData[],
+  weights: ScoreWeights = DEFAULT_WEIGHTS
+): VideoWithScores[] {
+  if (videos.length === 0) return [];
+
+  // Calculate normalization bounds across all videos
+  const bounds = getNormalizationBounds(videos);
+
+  return videos.map((video) => {
+    const rawMetrics = calculateRawMetrics(video);
+
+    // Normalize metrics using min-max normalization
+    const engNorm = normalize(
+      rawMetrics.engagementRate,
+      bounds.engagement.min,
+      bounds.engagement.max
+    );
+    const commNorm = normalize(
+      rawMetrics.commentRate,
+      bounds.comment.min,
+      bounds.comment.max
+    );
+    const velNorm = normalize(
+      rawMetrics.velocity,
+      bounds.velocity.min,
+      bounds.velocity.max
+    );
+
+    // Calculate scores with normalized metrics and weights
+    const viralScore = calculateViralScoreFromNormalized(
+      engNorm,
+      commNorm,
+      velNorm,
+      weights.viral
+    );
+    const performanceScore = calculatePerformanceScoreFromNormalized(
+      engNorm,
+      commNorm,
+      weights.performance
+    );
+
+    return {
+      ...video,
+      viralScore,
+      performanceScore,
+      videoType: classifyVideoType(video),
+      daysSincePublish: daysSincePublish(video.publishedAt),
+      engagementRate: rawMetrics.engagementRate,
+      commentRate: rawMetrics.commentRate,
+      velocity: rawMetrics.velocity,
+    };
+  });
+}
+
+/**
+ * @deprecated Use processVideosWithScores for batch processing with proper normalization
+ * Legacy function for single video processing (uses fixed normalization)
  */
 export function processVideoWithScores(video: VideoData): VideoWithScores {
   return {
@@ -227,24 +410,27 @@ export function processVideoWithScores(video: VideoData): VideoWithScores {
 
 /**
  * Filter and process videos based on type and timeframe
+ * Uses batch processing with min-max normalization for accurate scores
  */
 export function filterAndProcessVideos(
   videos: VideoData[],
   videoType: VideoType,
-  timeframeDays: number | null
+  timeframeDays: number | null,
+  weights: ScoreWeights = DEFAULT_WEIGHTS
 ): VideoWithScores[] {
-  return videos
-    .filter((video) => {
-      // Filter by timeframe
-      if (!isWithinTimeframe(video.publishedAt, timeframeDays)) {
-        return false;
-      }
+  const filteredVideos = videos.filter((video) => {
+    // Filter by timeframe
+    if (!isWithinTimeframe(video.publishedAt, timeframeDays)) {
+      return false;
+    }
 
-      // Filter by video type
-      if (videoType === "all") return true;
-      return classifyVideoType(video) === videoType;
-    })
-    .map(processVideoWithScores);
+    // Filter by video type
+    if (videoType === "all") return true;
+    return classifyVideoType(video) === videoType;
+  });
+
+  // Use batch processing for proper normalization across the filtered set
+  return processVideosWithScores(filteredVideos, weights);
 }
 
 /**

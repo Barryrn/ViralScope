@@ -23,6 +23,7 @@ import {
   type TimeframeValue,
   type SortOption,
 } from "@/lib/analytics-utils";
+import { useScoreWeights } from "@/lib/contexts/score-weights-context";
 import { cn } from "@/lib/utils";
 
 // Components
@@ -30,6 +31,7 @@ import { ChannelHeader } from "./components/channel-header";
 import { VideoCardWithScores } from "./components/video-card-with-scores";
 import { AnalyticsFilters } from "./analytics/analytics-filters";
 import { AnalyticsStats, TopPerformers } from "./analytics/analytics-stats";
+import { WeightConfig } from "./analytics/weight-config";
 
 interface ChannelViewProps {
   channel: ChannelData;
@@ -49,6 +51,9 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
   const [videoType, setVideoType] = useState<VideoType>("all");
   const [timeframe, setTimeframe] = useState<TimeframeValue>("all");
   const [sortBy, setSortBy] = useState<SortOption>("viral");
+
+  // Get user's score weights
+  const { weights } = useScoreWeights();
 
   const fetchChannelVideos = useAction(api.youtube.fetchChannelVideos);
 
@@ -104,9 +109,9 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
   }, [timeframe]);
 
   const processedVideos = useMemo(() => {
-    const filtered = filterAndProcessVideos(videos, videoType, timeframeDays);
+    const filtered = filterAndProcessVideos(videos, videoType, timeframeDays, weights);
     return sortVideos(filtered, sortBy);
-  }, [videos, videoType, timeframeDays, sortBy]);
+  }, [videos, videoType, timeframeDays, sortBy, weights]);
 
   const stats = useMemo(
     () => getVideoStats(processedVideos),
@@ -151,6 +156,9 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
                 shortsCount={stats.shortsCount}
                 longFormCount={stats.longFormCount}
               />
+
+              {/* Weight Configuration */}
+              <WeightConfig />
 
               {/* Top Performers */}
               <TopPerformers

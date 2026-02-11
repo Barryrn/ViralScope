@@ -8,14 +8,13 @@ import {
   type ParsedYouTubeInput,
 } from "@/lib/youtube-utils";
 import { useErrorHandler } from "./use-error-handler";
-import type { VideoData, ChannelData, SearchResult } from "@/convex/youtubeTypes";
+import type { VideoData, ChannelData } from "@/convex/youtubeTypes";
 
 export type FetchState = "idle" | "loading" | "success" | "error";
 
 export type YouTubeResult =
   | { type: "video"; data: VideoData }
-  | { type: "channel"; data: ChannelData }
-  | { type: "search"; data: SearchResult };
+  | { type: "channel"; data: ChannelData };
 
 interface UseYouTubeDataReturn {
   state: FetchState;
@@ -37,7 +36,6 @@ export function useYouTubeData(): UseYouTubeDataReturn {
 
   const fetchVideo = useAction(api.youtube.fetchVideoData);
   const fetchChannel = useAction(api.youtube.fetchChannelData);
-  const searchVideos = useAction(api.youtube.searchVideos);
   const { handleError } = useErrorHandler();
 
   const fetchData = useCallback(
@@ -69,11 +67,6 @@ export function useYouTubeData(): UseYouTubeDataReturn {
             setResult({ type: "channel", data: channelData });
             break;
           }
-          case "search": {
-            const searchData = await searchVideos({ query: parsed.query });
-            setResult({ type: "search", data: searchData });
-            break;
-          }
         }
         setState("success");
       } catch (err) {
@@ -101,7 +94,7 @@ export function useYouTubeData(): UseYouTubeDataReturn {
         });
       }
     },
-    [fetchVideo, fetchChannel, searchVideos, handleError]
+    [fetchVideo, fetchChannel, handleError]
   );
 
   const reset = useCallback(() => {
