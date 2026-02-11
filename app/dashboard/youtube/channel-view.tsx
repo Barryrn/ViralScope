@@ -18,6 +18,7 @@ import {
   sortVideos,
   getVideoStats,
   isWithinTimeframe,
+  classifyVideoType,
   TIMEFRAME_OPTIONS,
   SORT_OPTIONS,
   DEFAULT_TIMEFRAME,
@@ -50,6 +51,8 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
   const [videosError, setVideosError] = useState<string | null>(null);
   const [nextPageToken, setNextPageToken] = useState<string | undefined>();
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  // Track how many days of videos we've fetched (to know when to fetch more)
+  const [fetchedUpToDays, setFetchedUpToDays] = useState<number>(60);
 
   // Analytics filter state
   const [videoType, setVideoType] = useState<VideoType>("all");
@@ -68,6 +71,7 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
       setVideosError(null);
       setVideos([]);
       setNextPageToken(undefined);
+      setFetchedUpToDays(60);
 
       try {
         let allVideos: VideoData[] = [];
@@ -111,6 +115,7 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
     setVideosError(null);
     setVideos([]);
     setNextPageToken(undefined);
+    setFetchedUpToDays(60);
 
     try {
       let allVideos: VideoData[] = [];
@@ -143,25 +148,88 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
     }
   }, [channel.id, fetchChannelVideos]);
 
-  // Show More handler - fetches +10 more videos from API
+  // Helper to fetch videos up to a certain timeframe
+  const fetchVideosUpToTimeframe = useCallback(
+    async (targetDays: number, startToken?: string, existingVideos: VideoData[] = []) => {
+      let allVideos = [...existingVideos];
+      let pageToken = startToken;
+
+      do {
+        const result = await fetchChannelVideos({
+          channelId: channel.id,
+          maxResults: 50,
+          pageToken,
+        });
+
+        allVideos = [...allVideos, ...result.videos];
+        pageToken = result.nextPageToken;
+
+        // Check if oldest video in batch is older than target timeframe
+        const lastVideo = result.videos[result.videos.length - 1];
+        if (lastVideo && !isWithinTimeframe(lastVideo.publishedAt, targetDays)) {
+          break;
+        }
+      } while (pageToken);
+
+      return { videos: allVideos, nextPageToken: pageToken };
+    },
+    [channel.id, fetchChannelVideos]
+  );
+
+  // Show More handler - fetches more videos within current timeframe
   const handleShowMore = useCallback(async () => {
     if (isLoadingMore || !nextPageToken) return;
 
+    const currentTimeframeDays =
+      TIMEFRAME_OPTIONS.find((o) => o.value === timeframe)?.days ?? 60;
+
     setIsLoadingMore(true);
     try {
-      const result = await fetchChannelVideos({
-        channelId: channel.id,
-        maxResults: 10,
-        pageToken: nextPageToken,
-      });
-      setVideos((prev) => [...prev, ...result.videos]);
+      // Fetch more videos, respecting the current timeframe
+      const result = await fetchVideosUpToTimeframe(
+        currentTimeframeDays,
+        nextPageToken,
+        []
+      );
+
+      if (result.videos.length > 0) {
+        setVideos((prev) => [...prev, ...result.videos]);
+        setFetchedUpToDays(currentTimeframeDays);
+      }
       setNextPageToken(result.nextPageToken);
     } catch (err) {
       console.error("Failed to load more videos:", err);
     } finally {
       setIsLoadingMore(false);
     }
-  }, [isLoadingMore, nextPageToken, channel.id, fetchChannelVideos]);
+  }, [isLoadingMore, nextPageToken, timeframe, fetchVideosUpToTimeframe]);
+
+  // Handle timeframe change - fetch more if needed
+  const handleTimeframeChange = useCallback(
+    async (newTimeframe: TimeframeValue) => {
+      setTimeframe(newTimeframe);
+
+      const newDays = TIMEFRAME_OPTIONS.find((o) => o.value === newTimeframe)?.days ?? 60;
+
+      // If new timeframe is larger and we have more videos to fetch, get them
+      if (newDays > fetchedUpToDays && nextPageToken) {
+        setIsLoadingMore(true);
+        try {
+          const result = await fetchVideosUpToTimeframe(newDays, nextPageToken, []);
+          if (result.videos.length > 0) {
+            setVideos((prev) => [...prev, ...result.videos]);
+          }
+          setNextPageToken(result.nextPageToken);
+          setFetchedUpToDays(newDays);
+        } catch (err) {
+          console.error("Failed to fetch videos for new timeframe:", err);
+        } finally {
+          setIsLoadingMore(false);
+        }
+      }
+    },
+    [fetchedUpToDays, nextPageToken, fetchVideosUpToTimeframe]
+  );
 
   // Can show more videos from API?
   const canShowMore = !!nextPageToken;
@@ -172,20 +240,19 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
     return option?.days ?? null;
   }, [timeframe]);
 
-  // Videos filtered by timeframe - used for stats only
-  const statsVideos = useMemo(() => {
+  // Process and filter videos by timeframe and video type
+  const processedVideos = useMemo(() => {
     return filterAndProcessVideos(videos, videoType, timeframeDays, weights);
   }, [videos, videoType, timeframeDays, weights]);
 
-  // All videos for display - NO timeframe filter so Show More works
+  // Sort for display
   const displayedVideos = useMemo(() => {
-    const filtered = filterAndProcessVideos(videos, videoType, null, weights);
-    return sortVideos(filtered, sortBy);
-  }, [videos, videoType, sortBy, weights]);
+    return sortVideos(processedVideos, sortBy);
+  }, [processedVideos, sortBy]);
 
   const stats = useMemo(
-    () => getVideoStats(statsVideos),
-    [statsVideos]
+    () => getVideoStats(processedVideos),
+    [processedVideos]
   );
 
   // Get the current sort label for display
@@ -218,9 +285,9 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
             <EmptyState />
           ) : (
             <>
-              {/* Statistics - uses timeframe-filtered videos */}
+              {/* Statistics */}
               <AnalyticsStats
-                videos={statsVideos}
+                videos={processedVideos}
                 avgViralScore={stats.avgViralScore}
                 avgPerformanceScore={stats.avgPerformanceScore}
                 shortsCount={stats.shortsCount}
@@ -242,7 +309,7 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
                   videoType={videoType}
                   onVideoTypeChange={setVideoType}
                   timeframe={timeframe}
-                  onTimeframeChange={setTimeframe}
+                  onTimeframeChange={handleTimeframeChange}
                   sortBy={sortBy}
                   onSortByChange={setSortBy}
                 />
@@ -287,7 +354,7 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
                         No videos match filters
                       </p>
                       <p className="mt-1 text-sm text-muted-foreground/70">
-                        Try adjusting your video type filter
+                        Try adjusting your filters or timeframe
                       </p>
                     </div>
                   </motion.div>
