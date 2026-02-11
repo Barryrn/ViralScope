@@ -103,14 +103,15 @@ export function isWithinTimeframe(
  * Timeframe options for filtering
  */
 export const TIMEFRAME_OPTIONS = [
-  { value: "7", label: "Last 7 days", days: 7 },
-  { value: "30", label: "Last 30 days", days: 30 },
   { value: "60", label: "Last 60 days", days: 60 },
   { value: "90", label: "Last 90 days", days: 90 },
-  { value: "all", label: "All time", days: null },
+  { value: "180", label: "Last 180 days", days: 180 },
+  { value: "360", label: "Last 360 days", days: 360 },
 ] as const;
 
 export type TimeframeValue = (typeof TIMEFRAME_OPTIONS)[number]["value"];
+
+export const DEFAULT_TIMEFRAME: TimeframeValue = "60";
 
 /**
  * Calculate Engagement Rate

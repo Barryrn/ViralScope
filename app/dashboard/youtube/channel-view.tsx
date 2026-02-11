@@ -17,8 +17,10 @@ import {
   filterAndProcessVideos,
   sortVideos,
   getVideoStats,
+  isWithinTimeframe,
   TIMEFRAME_OPTIONS,
   SORT_OPTIONS,
+  DEFAULT_TIMEFRAME,
   type VideoType,
   type TimeframeValue,
   type SortOption,
@@ -46,29 +48,51 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
   const [videosState, setVideosState] = useState<VideosState>("idle");
   const [videos, setVideos] = useState<VideoData[]>([]);
   const [videosError, setVideosError] = useState<string | null>(null);
+  const [nextPageToken, setNextPageToken] = useState<string | undefined>();
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Analytics filter state
   const [videoType, setVideoType] = useState<VideoType>("all");
-  const [timeframe, setTimeframe] = useState<TimeframeValue>("all");
-  const [sortBy, setSortBy] = useState<SortOption>("viral");
+  const [timeframe, setTimeframe] = useState<TimeframeValue>(DEFAULT_TIMEFRAME);
+  const [sortBy, setSortBy] = useState<SortOption>("date");
 
   // Get user's score weights
   const { weights } = useScoreWeights();
 
   const fetchChannelVideos = useAction(api.youtube.fetchChannelVideos);
 
-  // Initial fetch when channel is available
+  // Initial fetch - get all videos within 60-day timeframe
   useEffect(() => {
     async function loadVideos() {
       setVideosState("loading");
       setVideosError(null);
+      setVideos([]);
+      setNextPageToken(undefined);
 
       try {
-        const result = await fetchChannelVideos({
-          channelId: channel.id,
-          maxResults: 50,
-        });
-        setVideos(result.videos);
+        let allVideos: VideoData[] = [];
+        let pageToken: string | undefined = undefined;
+
+        // Fetch batches until we hit videos older than 60 days
+        do {
+          const result = await fetchChannelVideos({
+            channelId: channel.id,
+            maxResults: 50,
+            pageToken,
+          });
+
+          allVideos = [...allVideos, ...result.videos];
+          pageToken = result.nextPageToken;
+
+          // Check if oldest video in batch is older than 60 days
+          const lastVideo = result.videos[result.videos.length - 1];
+          if (lastVideo && !isWithinTimeframe(lastVideo.publishedAt, 60)) {
+            break; // We've gone past the default timeframe
+          }
+        } while (pageToken);
+
+        setVideos(allVideos);
+        setNextPageToken(pageToken);
         setVideosState("success");
       } catch (err) {
         const message =
@@ -86,13 +110,30 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
     setVideosState("loading");
     setVideosError(null);
     setVideos([]);
+    setNextPageToken(undefined);
 
     try {
-      const result = await fetchChannelVideos({
-        channelId: channel.id,
-        maxResults: 50,
-      });
-      setVideos(result.videos);
+      let allVideos: VideoData[] = [];
+      let pageToken: string | undefined = undefined;
+
+      do {
+        const result = await fetchChannelVideos({
+          channelId: channel.id,
+          maxResults: 50,
+          pageToken,
+        });
+
+        allVideos = [...allVideos, ...result.videos];
+        pageToken = result.nextPageToken;
+
+        const lastVideo = result.videos[result.videos.length - 1];
+        if (lastVideo && !isWithinTimeframe(lastVideo.publishedAt, 60)) {
+          break;
+        }
+      } while (pageToken);
+
+      setVideos(allVideos);
+      setNextPageToken(pageToken);
       setVideosState("success");
     } catch (err) {
       const message =
@@ -101,6 +142,29 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
       setVideosState("error");
     }
   }, [channel.id, fetchChannelVideos]);
+
+  // Show More handler - fetches +10 more videos from API
+  const handleShowMore = useCallback(async () => {
+    if (isLoadingMore || !nextPageToken) return;
+
+    setIsLoadingMore(true);
+    try {
+      const result = await fetchChannelVideos({
+        channelId: channel.id,
+        maxResults: 10,
+        pageToken: nextPageToken,
+      });
+      setVideos((prev) => [...prev, ...result.videos]);
+      setNextPageToken(result.nextPageToken);
+    } catch (err) {
+      console.error("Failed to load more videos:", err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoadingMore, nextPageToken, channel.id, fetchChannelVideos]);
+
+  // Can show more videos from API?
+  const canShowMore = !!nextPageToken;
 
   // Process videos for analytics
   const timeframeDays = useMemo(() => {
@@ -185,7 +249,11 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
                   <span className="font-semibold text-foreground">
                     {processedVideos.length}
                   </span>{" "}
-                  {processedVideos.length === 1 ? "video" : "videos"}
+                  of{" "}
+                  <span className="font-semibold text-foreground">
+                    {videos.length}
+                  </span>{" "}
+                  fetched {videos.length === 1 ? "video" : "videos"}
                   {videoType !== "all" && (
                     <span className="ml-1">
                       (
@@ -240,6 +308,27 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* Show More Button */}
+              {canShowMore && (
+                <div className="flex justify-center pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={handleShowMore}
+                    disabled={isLoadingMore}
+                    className="gap-2"
+                  >
+                    {isLoadingMore ? (
+                      <>
+                        <IconLoader2 className="h-4 w-4 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>Show More</>
+                    )}
+                  </Button>
+                </div>
+              )}
             </>
           )}
         </div>
