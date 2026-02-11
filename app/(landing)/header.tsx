@@ -68,8 +68,8 @@ export const HeroHeader = () => {
                                 </AuthLoading>
                                 <Authenticated>
                                     <Button asChild size="sm">
-                                        <Link href="/dashboard">
-                                            <span>{tCommon('dashboard')}</span>
+                                        <Link href="/dashboard/youtube">
+                                            <span>{tCommon('youtubeAnalytics')}</span>
                                         </Link>
                                     </Button>
                                     <UserButton appearance={appearance} />

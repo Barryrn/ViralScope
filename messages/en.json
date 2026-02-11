@@ -5,6 +5,7 @@
     "signUp": "Sign Up",
     "getStarted": "Get Started",
     "dashboard": "Dashboard",
+    "youtubeAnalytics": "YouTube Analytics",
     "home": "Home",
     "learnMore": "Learn More"
   },
@@ -27,18 +28,14 @@
   },
   "dashboard": {
     "header": {
-      "dashboard": "Dashboard",
+      "youtube": "YouTube Analytics",
+      "saved": "Saved Videos",
       "analytics": "Analytics",
       "videos": "Videos",
-      "paymentGated": "Pro Features",
       "page": "Page"
     },
     "sidebar": {
       "darkMode": "Dark Mode"
-    },
-    "welcome": {
-      "title": "Welcome to ViralScope",
-      "subtitle": "Connect your YouTube channel to get started with analytics."
     }
   },
   "youtube": {

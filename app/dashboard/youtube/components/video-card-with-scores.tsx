@@ -13,8 +13,8 @@ import {
   IconBolt,
   IconTrendingUp,
   IconExternalLink,
-  IconPlayerPlay,
 } from "@tabler/icons-react";
+import { SaveButton } from "./save-button";
 import {
   formatNumber,
   formatDuration,
@@ -128,6 +128,12 @@ function GridCard({
                 Short
               </Badge>
             )}
+
+            {/* Save button */}
+            <SaveButton
+              video={video}
+              className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100"
+            />
           </div>
 
           {/* Content */}
@@ -216,11 +222,17 @@ function ListCard({
               href={`https://youtube.com/watch?v=${video.id}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition-opacity hover:bg-black/70 group-hover:opacity-100"
+              className="absolute right-10 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition-opacity hover:bg-black/70 group-hover:opacity-100"
               onClick={(e) => e.stopPropagation()}
             >
               <IconExternalLink className="h-3.5 w-3.5" />
             </a>
+
+            {/* Save button */}
+            <SaveButton
+              video={video}
+              className="absolute right-2 top-2 h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
+            />
           </div>
 
           {/* Content */}

@@ -13,10 +13,10 @@ export function SiteHeader() {
 
   const getPageTitle = (path: string): string => {
     switch (path) {
-      case "/dashboard":
-        return t('dashboard')
-      case "/dashboard/payment-gated":
-        return t('paymentGated')
+      case "/dashboard/youtube":
+        return t('youtube')
+      case "/dashboard/saved":
+        return t('saved')
       default:
         return t('page')
     }

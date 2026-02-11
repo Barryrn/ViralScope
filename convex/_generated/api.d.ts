@@ -15,6 +15,7 @@ import type * as errors from "../errors.js";
 import type * as http from "../http.js";
 import type * as paymentAttemptTypes from "../paymentAttemptTypes.js";
 import type * as paymentAttempts from "../paymentAttempts.js";
+import type * as savedVideos from "../savedVideos.js";
 import type * as userSettings from "../userSettings.js";
 import type * as users from "../users.js";
 import type * as withErrorHandling from "../withErrorHandling.js";
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   paymentAttemptTypes: typeof paymentAttemptTypes;
   paymentAttempts: typeof paymentAttempts;
+  savedVideos: typeof savedVideos;
   userSettings: typeof userSettings;
   users: typeof users;
   withErrorHandling: typeof withErrorHandling;

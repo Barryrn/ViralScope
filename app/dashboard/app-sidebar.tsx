@@ -2,11 +2,10 @@
 
 import * as React from "react"
 import {
-  IconDashboard,
   IconSettings,
   IconHelp,
-  IconSparkles,
   IconBrandYoutube,
+  IconBookmark,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/app/dashboard/nav-main"
@@ -27,19 +26,14 @@ import Link from "next/link"
 const data = {
   navMain: [
     {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: IconDashboard,
-    },
-    {
       title: "YouTube",
       url: "/dashboard/youtube",
       icon: IconBrandYoutube,
     },
     {
-      title: "Pro Features",
-      url: "/dashboard/payment-gated",
-      icon: IconSparkles,
+      title: "Saved Videos",
+      url: "/dashboard/saved",
+      icon: IconBookmark,
     },
   ],
   navSecondary: [

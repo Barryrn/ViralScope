@@ -64,4 +64,27 @@ export default defineSchema({
 
     updatedAt: v.number(),
   }).index("byUserId", ["userId"]),
+
+  // Saved videos for user bookmarks
+  savedVideos: defineTable({
+    userId: v.id("users"),
+    videoId: v.string(),
+    videoData: v.object({
+      id: v.string(),
+      title: v.string(),
+      description: v.string(),
+      thumbnailUrl: v.string(),
+      channelId: v.string(),
+      channelTitle: v.string(),
+      publishedAt: v.string(),
+      viewCount: v.number(),
+      likeCount: v.number(),
+      commentCount: v.number(),
+      duration: v.string(),
+      tags: v.optional(v.array(v.string())),
+    }),
+    savedAt: v.number(),
+  })
+    .index("byUserId", ["userId"])
+    .index("byUserIdAndVideoId", ["userId", "videoId"]),
 });

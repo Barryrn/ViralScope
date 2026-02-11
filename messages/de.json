@@ -5,6 +5,7 @@
     "signUp": "Registrieren",
     "getStarted": "Jetzt starten",
     "dashboard": "Dashboard",
+    "youtubeAnalytics": "YouTube-Analysen",
     "home": "Startseite",
     "learnMore": "Mehr erfahren"
   },
@@ -27,18 +28,14 @@
   },
   "dashboard": {
     "header": {
-      "dashboard": "Dashboard",
+      "youtube": "YouTube-Analysen",
+      "saved": "Gespeicherte Videos",
       "analytics": "Analysen",
       "videos": "Videos",
-      "paymentGated": "Pro-Funktionen",
       "page": "Seite"
     },
     "sidebar": {
       "darkMode": "Dunkelmodus"
-    },
-    "welcome": {
-      "title": "Willkommen bei ViralScope",
-      "subtitle": "Verbinde deinen YouTube-Kanal, um mit den Analysen zu beginnen."
     }
   },
   "youtube": {
