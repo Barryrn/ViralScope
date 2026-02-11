@@ -15,6 +15,7 @@ import {
 import type { ChannelData, VideoData } from "@/convex/youtubeTypes";
 import {
   filterAndProcessVideos,
+  processVideosWithScores,
   sortVideos,
   getVideoStats,
   isWithinTimeframe,
@@ -53,6 +54,8 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   // Track how many days of videos we've fetched (to know when to fetch more)
   const [fetchedUpToDays, setFetchedUpToDays] = useState<number>(60);
+  // Track how many extra videos beyond timeframe to show (from "Show More" clicks)
+  const [extraVideosShown, setExtraVideosShown] = useState(0);
 
   // Analytics filter state
   const [videoType, setVideoType] = useState<VideoType>("all");
@@ -176,38 +179,53 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
     [channel.id, fetchChannelVideos]
   );
 
-  // Show More handler - fetches more videos within current timeframe
+  // Show More handler - loads 10 more videos beyond current timeframe
   const handleShowMore = useCallback(async () => {
-    if (isLoadingMore || !nextPageToken) return;
+    if (isLoadingMore) return;
 
+    // Increment extra videos count
+    const newExtraCount = extraVideosShown + 10;
+    setExtraVideosShown(newExtraCount);
+
+    // Check if we need to fetch more videos from API
     const currentTimeframeDays =
       TIMEFRAME_OPTIONS.find((o) => o.value === timeframe)?.days ?? 60;
 
-    setIsLoadingMore(true);
-    try {
-      // Fetch more videos, respecting the current timeframe
-      const result = await fetchVideosUpToTimeframe(
-        currentTimeframeDays,
-        nextPageToken,
-        []
-      );
+    const videosOutsideTimeframe = videos.filter(
+      (v) =>
+        !isWithinTimeframe(v.publishedAt, currentTimeframeDays) &&
+        (videoType === "all" || classifyVideoType(v) === videoType)
+    ).length;
 
-      if (result.videos.length > 0) {
-        setVideos((prev) => [...prev, ...result.videos]);
-        setFetchedUpToDays(currentTimeframeDays);
+    // If we don't have enough videos and there's more to fetch, get them
+    if (videosOutsideTimeframe < newExtraCount && nextPageToken) {
+      setIsLoadingMore(true);
+      try {
+        const result = await fetchChannelVideos({
+          channelId: channel.id,
+          maxResults: 50,
+          pageToken: nextPageToken,
+        });
+
+        if (result.videos.length > 0) {
+          setVideos((prev) => [...prev, ...result.videos]);
+        }
+        setNextPageToken(result.nextPageToken);
+      } catch (err) {
+        console.error("Failed to load more videos:", err);
+      } finally {
+        setIsLoadingMore(false);
       }
-      setNextPageToken(result.nextPageToken);
-    } catch (err) {
-      console.error("Failed to load more videos:", err);
-    } finally {
-      setIsLoadingMore(false);
     }
-  }, [isLoadingMore, nextPageToken, timeframe, fetchVideosUpToTimeframe]);
+  }, [isLoadingMore, nextPageToken, timeframe, videos, videoType, extraVideosShown, channel.id, fetchChannelVideos]);
 
-  // Handle timeframe change - fetch more if needed
+  // Handle timeframe change - reset extras and fetch more if needed
   const handleTimeframeChange = useCallback(
     async (newTimeframe: TimeframeValue) => {
       setTimeframe(newTimeframe);
+
+      // Reset "Show More" state when timeframe changes
+      setExtraVideosShown(0);
 
       const newDays = TIMEFRAME_OPTIONS.find((o) => o.value === newTimeframe)?.days ?? 60;
 
@@ -231,19 +249,42 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
     [fetchedUpToDays, nextPageToken, fetchVideosUpToTimeframe]
   );
 
-  // Can show more videos from API?
-  const canShowMore = !!nextPageToken;
-
   // Process videos for analytics
   const timeframeDays = useMemo(() => {
     const option = TIMEFRAME_OPTIONS.find((o) => o.value === timeframe);
     return option?.days ?? null;
   }, [timeframe]);
 
-  // Process and filter videos by timeframe and video type
-  const processedVideos = useMemo(() => {
+  // Videos within timeframe (normal filtered set)
+  const videosWithinTimeframe = useMemo(() => {
     return filterAndProcessVideos(videos, videoType, timeframeDays, weights);
   }, [videos, videoType, timeframeDays, weights]);
+
+  // Videos beyond timeframe (for Show More) - only filtered by video type
+  const videosBeyondTimeframe = useMemo(() => {
+    if (extraVideosShown === 0) return [];
+
+    // Get all videos that pass videoType filter but are OUTSIDE timeframe
+    const filtered = videos.filter((video) => {
+      if (videoType !== "all" && classifyVideoType(video) !== videoType) {
+        return false;
+      }
+      // Must be outside the current timeframe
+      return !isWithinTimeframe(video.publishedAt, timeframeDays);
+    });
+
+    // Process with scores and take only the requested amount
+    const processed = processVideosWithScores(filtered, weights);
+    // Sort by date (most recent first) and take extraVideosShown
+    return processed
+      .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+      .slice(0, extraVideosShown);
+  }, [videos, videoType, timeframeDays, weights, extraVideosShown]);
+
+  // Combined for display
+  const processedVideos = useMemo(() => {
+    return [...videosWithinTimeframe, ...videosBeyondTimeframe];
+  }, [videosWithinTimeframe, videosBeyondTimeframe]);
 
   // Sort for display
   const displayedVideos = useMemo(() => {
@@ -254,6 +295,19 @@ export function ChannelView({ channel, onReset, className }: ChannelViewProps) {
     () => getVideoStats(processedVideos),
     [processedVideos]
   );
+
+  // Can show more videos? Either from API or from already-fetched videos beyond timeframe
+  const canShowMore = useMemo(() => {
+    // Count videos beyond timeframe that match the current video type filter
+    const totalBeyondTimeframe = videos.filter(
+      (v) =>
+        !isWithinTimeframe(v.publishedAt, timeframeDays) &&
+        (videoType === "all" || classifyVideoType(v) === videoType)
+    ).length;
+
+    // Show button if there are more videos from API OR more beyond-timeframe videos to display
+    return !!nextPageToken || extraVideosShown < totalBeyondTimeframe;
+  }, [nextPageToken, videos, timeframeDays, videoType, extraVideosShown]);
 
   // Get the current sort label for display
   const currentSortLabel = useMemo(() => {
